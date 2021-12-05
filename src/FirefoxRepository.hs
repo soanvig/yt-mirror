@@ -5,6 +5,11 @@ module FirefoxRepository where
 import Database.SQLite.Simple 
 import Definitions
 
+instance FromRow Bookmark where
+    fromRow = Bookmark
+      <$> field
+      <*> field
+
 loadBookmarks :: String -> IO [Bookmark]
 loadBookmarks placesLocation = do
   conn <- open placesLocation
