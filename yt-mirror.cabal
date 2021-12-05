@@ -11,6 +11,8 @@ library
     other-modules:
         Definitions
         FirefoxRepository
+        ProcessRepository
+        Youtube
 
     build-depends:    base ^>=4.14.1.0
                     , sqlite-simple
