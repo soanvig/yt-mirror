@@ -10,7 +10,7 @@ import Database.SQLite.Simple.Ok
 import Data.Text (unpack, pack)
 
 instance FromField ProcessState where
-  fromField f = (parseFieldData . fieldData) f -- 
+  fromField f = (parseFieldData . fieldData) f
     where
       parseFieldData (SQLText txt) = Ok (read $ unpack txt :: ProcessState)
       parseFieldData d = returnError ConversionFailed f "expecting SQLText column type"
@@ -24,18 +24,26 @@ instance FromRow Process where
 instance ToRow Process where
   toRow (Process youtubeId state) = toRow (youtubeId, state)
 
-saveSingleProcess :: Connection -> Process -> IO ()
-saveSingleProcess conn = execute conn "INSERT INTO process (youtubeId, state) VALUES (?, ?)"
-
-saveProcesses :: [Process] -> IO ()
-saveProcesses processes = do
+openRepository :: IO Connection
+openRepository = do
   conn <- open "./process.sqlite"
   execute_ conn "CREATE TABLE IF NOT EXISTS process (\
     \youtubeId TEXT NOT NULL PRIMARY KEY,\
     \state TEXT\
     \)"
-  mapM_ (saveSingleProcess conn) processes
+  return conn
 
-  close conn
+closeRepository :: Connection -> IO ()
+closeRepository = close
+
+saveSingleProcess :: Connection -> Process -> IO ()
+saveSingleProcess conn = execute conn "INSERT INTO process (youtubeId, state) VALUES (?, ?)"
+
+getProcesses :: Connection -> IO [Process]
+getProcesses conn = query_ conn "SELECT * FROM process"
+
+saveProcesses :: Connection -> [Process] -> IO ()
+saveProcesses conn processes = do
+  mapM_ (saveSingleProcess conn) processes
   
   

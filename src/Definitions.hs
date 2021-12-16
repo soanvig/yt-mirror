@@ -26,4 +26,7 @@ module Definitions where
       processYoutubeId = youtubeId,
       processState = Pending
     }
+
+  isSameProcess :: Process -> Process -> Bool
+  isSameProcess p1 p2 = processYoutubeId p1 == processYoutubeId p2
   
