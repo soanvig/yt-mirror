@@ -24,17 +24,17 @@ instance FromRow Process where
 instance ToRow Process where
   toRow (Process youtubeId state) = toRow (youtubeId, state)
 
-openRepository :: IO Connection
-openRepository = do
+openRepository :: (Connection -> IO()) -> IO ()
+openRepository operation = do
   conn <- open "./process.sqlite"
   execute_ conn "CREATE TABLE IF NOT EXISTS process (\
     \youtubeId TEXT NOT NULL PRIMARY KEY,\
     \state TEXT\
     \)"
-  return conn
 
-closeRepository :: Connection -> IO ()
-closeRepository = close
+  operation conn
+
+  close conn
 
 saveSingleProcess :: Connection -> Process -> IO ()
 saveSingleProcess conn = execute conn "INSERT INTO process (youtubeId, state) VALUES (?, ?)"

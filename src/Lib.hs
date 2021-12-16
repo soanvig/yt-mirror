@@ -18,16 +18,15 @@ notF :: (a -> Bool) -> a -> Bool
 notF f x = not $ f x
 
 test :: IO ()
-test = do
-  processes <- getProcesses
-  let allProcesses = nubBy isSameProcess processes
-  conn <- PR.openRepository
-  existingProcesses <- PR.getProcesses conn
-  let newProcesses = filter ((notF . isProcessExisting) existingProcesses) allProcesses
-  print $ "All processes: " ++ (show . length) allProcesses
-  print $ "Existing processes: " ++ (show . length) existingProcesses
-  print $ "New processes: " ++ (show . length) newProcesses
-  PR.saveProcesses conn newProcesses
-  PR.closeRepository conn
-  return ()
+test = PR.openRepository (
+  \conn -> do
+    processes <- getProcesses
+    let allProcesses = nubBy isSameProcess processes
+    existingProcesses <- PR.getProcesses conn
+    let newProcesses = filter ((notF . isProcessExisting) existingProcesses) allProcesses
+    print $ "All processes: " ++ (show . length) allProcesses
+    print $ "Existing processes: " ++ (show . length) existingProcesses
+    print $ "New processes: " ++ (show . length) newProcesses
+    PR.saveProcesses conn newProcesses
+  )
 
