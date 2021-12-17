@@ -5,6 +5,8 @@ import FirefoxRepository
 import qualified ProcessRepository as PR
 import Data.Maybe (mapMaybe)
 import Data.List (nubBy)
+import Control.Monad.Reader
+import Database.SQLite.Simple (Connection)
 
 getProcesses :: IO [Process]
 getProcesses = do
@@ -17,16 +19,18 @@ isProcessExisting existingProcesses process = any (isSameProcess process) existi
 notF :: (a -> Bool) -> a -> Bool
 notF f x = not $ f x
 
-test :: IO ()
-test = PR.openRepository (
-  \conn -> do
-    processes <- getProcesses
+operation :: ReaderT Connection IO ()
+operation = do
+    conn <- ask
+    processes <- lift getProcesses
     let allProcesses = nubBy isSameProcess processes
-    existingProcesses <- PR.getProcesses conn
+    existingProcesses <- lift $ PR.getProcesses conn
     let newProcesses = filter ((notF . isProcessExisting) existingProcesses) allProcesses
-    print $ "All processes: " ++ (show . length) allProcesses
-    print $ "Existing processes: " ++ (show . length) existingProcesses
-    print $ "New processes: " ++ (show . length) newProcesses
-    PR.saveProcesses conn newProcesses
-  )
+    lift $ print $ "All processes: " ++ (show . length) allProcesses
+    lift $ print $ "Existing processes: " ++ (show . length) existingProcesses
+    lift $ print $ "New processes: " ++ (show . length) newProcesses
+    lift $ PR.saveProcesses conn newProcesses
+
+test = PR.openRepository operation
+ 
 

@@ -8,6 +8,7 @@ import Database.SQLite.Simple.ToField
 import Definitions
 import Database.SQLite.Simple.Ok
 import Data.Text (unpack, pack)
+import Control.Monad.Reader
 
 instance FromField ProcessState where
   fromField f = (parseFieldData . fieldData) f
@@ -24,7 +25,7 @@ instance FromRow Process where
 instance ToRow Process where
   toRow (Process youtubeId state) = toRow (youtubeId, state)
 
-openRepository :: (Connection -> IO()) -> IO ()
+openRepository :: ReaderT Connection IO () -> IO ()
 openRepository operation = do
   conn <- open "./process.sqlite"
   execute_ conn "CREATE TABLE IF NOT EXISTS process (\
@@ -32,7 +33,7 @@ openRepository operation = do
     \state TEXT\
     \)"
 
-  operation conn
+  runReaderT operation conn
 
   close conn
 
