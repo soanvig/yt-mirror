@@ -37,14 +37,20 @@ openRepository operation = do
 
   close conn
 
-saveSingleProcess :: Connection -> Process -> IO ()
-saveSingleProcess conn = execute conn "INSERT INTO process (youtubeId, state) VALUES (?, ?)"
+saveSingleProcess :: Process -> ReaderT Connection IO ()
+saveSingleProcess process = do
+  conn <- ask
+  lift $ execute conn "INSERT INTO process (youtubeId, state) VALUES (?, ?)" process
 
-getProcesses :: Connection -> IO [Process]
-getProcesses conn = query_ conn "SELECT * FROM process"
+getProcesses :: ReaderT Connection IO [Process]
+getProcesses = do
+  conn <- ask
+  lift $ query_ conn "SELECT * FROM process"
 
-saveProcesses :: Connection -> [Process] -> IO ()
-saveProcesses conn processes = do
-  mapM_ (saveSingleProcess conn) processes
-  
+saveProcesses :: [Process] -> ReaderT Connection IO ()
+saveProcesses [] = return ()
+saveProcesses (x : rest) = do
+  conn <- ask
+  saveSingleProcess x
+  saveProcesses rest
   

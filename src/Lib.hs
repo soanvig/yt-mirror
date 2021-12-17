@@ -24,12 +24,12 @@ operation = do
     conn <- ask
     processes <- lift getProcesses
     let allProcesses = nubBy isSameProcess processes
-    existingProcesses <- lift $ PR.getProcesses conn
+    existingProcesses <- PR.getProcesses
     let newProcesses = filter ((notF . isProcessExisting) existingProcesses) allProcesses
     lift $ print $ "All processes: " ++ (show . length) allProcesses
     lift $ print $ "Existing processes: " ++ (show . length) existingProcesses
     lift $ print $ "New processes: " ++ (show . length) newProcesses
-    lift $ PR.saveProcesses conn newProcesses
+    PR.saveProcesses newProcesses
 
 test = PR.openRepository operation
  
