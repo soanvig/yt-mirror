@@ -1,17 +1,14 @@
 module Lib where
 
 import Definitions
-import FirefoxRepository
+import qualified FirefoxRepository as FR
 import qualified ProcessRepository as PR
 import Data.Maybe (mapMaybe)
 import Data.List (nubBy)
 import Control.Monad.Reader
 import Database.SQLite.Simple (Connection)
-
-getProcesses :: IO [Process]
-getProcesses = do
-  bookmarks <- loadBookmarks "./places.sqlite"
-  return $ mapMaybe newProcess bookmarks
+import qualified Logger
+import qualified Data.List as FR
 
 isProcessExisting :: [Process] -> Process -> Bool
 isProcessExisting existingProcesses process = any (isSameProcess process) existingProcesses
@@ -19,18 +16,20 @@ isProcessExisting existingProcesses process = any (isSameProcess process) existi
 notF :: (a -> Bool) -> a -> Bool
 notF f x = not $ f x
 
-operation :: ReaderT Connection IO ()
-operation = do
-    conn <- ask
-    processes <- lift getProcesses
+saveNewProcesses :: [Process] -> ReaderT Connection IO ()
+saveNewProcesses processes = do
     let allProcesses = nubBy isSameProcess processes
     existingProcesses <- PR.getProcesses
     let newProcesses = filter ((notF . isProcessExisting) existingProcesses) allProcesses
-    lift $ print $ "All processes: " ++ (show . length) allProcesses
-    lift $ print $ "Existing processes: " ++ (show . length) existingProcesses
-    lift $ print $ "New processes: " ++ (show . length) newProcesses
+
+    lift $ Logger.log (Logger.SaveProcessesLog newProcesses existingProcesses)
+
     PR.saveProcesses newProcesses
 
-test = PR.openRepository operation
+test :: IO ()
+test = do
+  bookmarks <- FR.openRepository "./places.sqlite" FR.loadBookmarks
+  let processes = mapMaybe newProcess bookmarks
+  PR.openRepository (saveNewProcesses processes)
  
 

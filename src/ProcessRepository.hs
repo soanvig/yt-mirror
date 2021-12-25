@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module ProcessRepository where
+module ProcessRepository (openRepository, getProcesses, saveProcesses) where
 
 import Database.SQLite.Simple
 import Database.SQLite.Simple.FromField
@@ -25,7 +25,14 @@ instance FromRow Process where
 instance ToRow Process where
   toRow (Process youtubeId state) = toRow (youtubeId, state)
 
-openRepository :: ReaderT Connection IO () -> IO ()
+saveSingleProcess :: Process -> ReaderT Connection IO ()
+saveSingleProcess process = do
+  conn <- ask
+  lift $ execute conn "INSERT INTO process (youtubeId, state) VALUES (?, ?)" process
+
+-- Public
+
+openRepository :: ReaderT Connection IO a -> IO a
 openRepository operation = do
   conn <- open "./process.sqlite"
   execute_ conn "CREATE TABLE IF NOT EXISTS process (\
@@ -33,14 +40,11 @@ openRepository operation = do
     \state TEXT\
     \)"
 
-  runReaderT operation conn
+  result <- runReaderT operation conn
 
   close conn
 
-saveSingleProcess :: Process -> ReaderT Connection IO ()
-saveSingleProcess process = do
-  conn <- ask
-  lift $ execute conn "INSERT INTO process (youtubeId, state) VALUES (?, ?)" process
+  return result
 
 getProcesses :: ReaderT Connection IO [Process]
 getProcesses = do

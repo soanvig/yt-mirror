@@ -1,4 +1,4 @@
-module Youtube where
+module Youtube (getYoutubeId, toYoutubeUrl) where
 
 import Network.URL
 import Data.Maybe ()
@@ -10,9 +10,10 @@ isYoutubeHost :: URLType -> Bool
 isYoutubeHost (Absolute h) = host h == "youtube.com" || host h == "www.youtube.com"
 isYoutubeHost _ = False
 
+-- Public
+
 toYoutubeUrl :: String -> Maybe String
 toYoutubeUrl url = importURL url >>= fromCondition (isYoutubeHost . url_type) >> Just url
--- isYoutube url = (isYoutubeHost . url_type) (fromJust (importURL url))
 
 getYoutubeId :: String -> Maybe String
 getYoutubeId url = importURL url >>= (findYoutubeId . url_params)
