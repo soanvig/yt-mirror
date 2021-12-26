@@ -54,7 +54,6 @@ getProcesses = do
 saveProcesses :: [Process] -> ReaderT Connection IO ()
 saveProcesses [] = return ()
 saveProcesses (x : rest) = do
-  conn <- ask
   saveSingleProcess x
   saveProcesses rest
   

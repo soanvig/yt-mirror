@@ -11,7 +11,7 @@ module Logger where
 
   log :: Log -> IO ()
   log (SaveProcessesLog newProcesses existingProcesses)= do
-    let newProcessesLength = length existingProcesses
+    let newProcessesLength = length newProcesses
     let existingProcessesLength = length existingProcesses
     let allProcessesLength = newProcessesLength + existingProcessesLength
 
