@@ -9,6 +9,7 @@ import Control.Monad.Reader
 import Database.SQLite.Simple (Connection)
 import qualified Logger
 import qualified Data.List as FR
+import qualified Downloader as D
 
 isProcessExisting :: [Process] -> Process -> Bool
 isProcessExisting existingProcesses process = any (isSameProcess process) existingProcesses
@@ -31,5 +32,6 @@ test = do
   bookmarks <- FR.openRepository "./places.sqlite" FR.loadBookmarks
   let processes = mapMaybe newProcess bookmarks
   PR.openRepository (saveNewProcesses processes)
+  D.download $ processYoutubeId $ head processes
  
 

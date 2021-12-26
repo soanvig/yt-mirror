@@ -14,12 +14,14 @@ library
         ProcessRepository
         Youtube
         Logger
+        Downloader
 
     build-depends:    base ^>=4.14.1.0
                     , sqlite-simple
                     , text
                     , url
                     , mtl
+                    , process
 
   default-language:    Haskell2010
 

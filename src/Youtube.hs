@@ -22,3 +22,4 @@ getYoutubeId url = importURL url >>= (findYoutubeId . url_params)
     findYoutubeId [] = Nothing
     findYoutubeId (("v", youtubeId) : rest) = Just youtubeId
     findYoutubeId ((x, y) : rest) = findYoutubeId rest
+
