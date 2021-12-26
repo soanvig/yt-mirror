@@ -27,11 +27,18 @@ saveNewProcesses processes = do
 
     PR.saveProcesses newProcesses
 
+downloadAndUpdate :: Process -> IO ()
+downloadAndUpdate process = do
+  let youtubeId = processYoutubeId process
+  D.download youtubeId
+  PR.openRepository (PR.updateProcessWithState youtubeId Processed)
+
 test :: IO ()
 test = do
   bookmarks <- FR.openRepository "./places.sqlite" FR.loadBookmarks
   let processes = mapMaybe newProcess bookmarks
   PR.openRepository (saveNewProcesses processes)
-  D.download $ processYoutubeId $ head processes
+  pendingProcesses <- PR.openRepository PR.getPendingProcesses
+  mapM_ downloadAndUpdate pendingProcesses
  
 
