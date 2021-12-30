@@ -7,6 +7,7 @@ import Data.Maybe (mapMaybe)
 import Data.List (nubBy)
 import Control.Monad.Reader
 import Database.SQLite.Simple (Connection)
+import qualified Actor as A
 import qualified Logger
 import qualified Data.List as FR
 import qualified Downloader as D
@@ -27,18 +28,13 @@ saveNewProcesses processes = do
 
     PR.saveProcesses newProcesses
 
-downloadAndUpdate :: Process -> IO ()
-downloadAndUpdate process = do
-  let youtubeId = processYoutubeId process
-  D.download youtubeId
-  PR.openRepository (PR.updateProcessWithState youtubeId Processed)
-
 test :: IO ()
 test = do
+  downloaderActor <- A.spawn D.downloader
   bookmarks <- FR.openRepository "./places.sqlite" FR.loadBookmarks
   let processes = mapMaybe newProcess bookmarks
   PR.openRepository (saveNewProcesses processes)
   pendingProcesses <- PR.openRepository PR.getPendingProcesses
-  mapM_ downloadAndUpdate pendingProcesses
- 
 
+  mapM_ (A.send downloaderActor . D.DownloaderStart) pendingProcesses
+  
