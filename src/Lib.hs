@@ -13,6 +13,7 @@ import qualified Data.List as FR
 import qualified Downloader as D
 import Control.Concurrent.STM
 import Control.Concurrent
+import Data.List.Split
 
 
 isProcessExisting :: [Process] -> Process -> Bool
@@ -47,16 +48,28 @@ waitForProcessedCounter toProcess processedCounter = do
   else
      waitForProcessedCounter toProcess processedCounter
 
+-- Round robins b over a
+roundRobin :: [a] -> [b] -> [(a, b)]
+roundRobin [] [] = []
+roundRobin [] _ = []
+roundRobin _ [] = []
+roundRobin a b = zip a b ++ roundRobin a (drop (length a) b)
+
 test :: IO ()
 test = do
   processedCounter <- newTVarIO 0
-  downloaderActor <- A.spawn $ D.downloader processedCounter
+  downloaderActors <- mapM (\_ -> A.spawn $ D.downloader processedCounter) [1..5]
+
+  saveBookmarksToProcesses
 
   pendingProcesses <- PR.openRepository PR.getPendingProcesses
 
   Logger.log $ Logger.StartingProcessingLog pendingProcesses
 
-  mapM_ (A.send downloaderActor . D.DownloaderStart) pendingProcesses
+  let actorsWithProcesses = roundRobin downloaderActors pendingProcesses
+
+  mapM_ (\(actor, process) -> A.send actor $ D.DownloaderStart process) actorsWithProcesses
+
   waitForProcessedCounter (length pendingProcesses) processedCounter
 
   Logger.log Logger.FinishedLog

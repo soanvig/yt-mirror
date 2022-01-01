@@ -27,18 +27,5 @@ spawn behaviour = do
   return (ActorRef mbox)
 
 send :: Show msg => ActorRef msg -> msg -> IO ()
-send recipient msg = do
-  print msg
-  atomically (writeTQueue (refMbox recipient) msg)
-
--- test :: IO ()
--- test = do
---   fileActor <- spawn fileReader
---   printerActor <- spawn printer
---   send fileActor (OpenFile "./docs.md")
---   send fileActor (SendLine printerActor PrinterLine)
---   send fileActor (SendLine printerActor PrinterLine)
---   send fileActor (SendLine printerActor PrinterLine)
---   send fileActor CloseFile
-
---   return ()
+send recipient msg = atomically (writeTQueue (refMbox recipient) msg)
+  
