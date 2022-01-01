@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Actor  (ActorRef (refId), Behaviour (..), spawn, send) where
+module Actor  (ActorRef (), Behaviour (..), spawn, send) where
 
 import Control.Monad
 import Control.Concurrent
@@ -9,25 +9,27 @@ import Data.IORef
 import System.IO
 
 data ActorRef msg = ActorRef {
-  refId   :: ThreadId,
   refMbox :: TQueue msg
 }
 
 newtype Behaviour msg = Behaviour (msg -> IO (Behaviour msg))
 
-go :: TQueue msg -> Behaviour msg -> IO ()
+go :: Show msg => TQueue msg -> Behaviour msg -> IO ()
 go mbox (Behaviour b) = do
   msg <- atomically (readTQueue mbox)
   b msg >>= go mbox
 
-spawn :: Behaviour msg -> IO (ActorRef msg)
+spawn :: Show msg => Behaviour msg -> IO (ActorRef msg)
 spawn behaviour = do
+  mvar <- newEmptyMVar 
   mbox <- newTQueueIO
-  pid  <- forkIO (go mbox behaviour)
-  return (ActorRef pid mbox)
+  forkIO (go mbox behaviour) 
+  return (ActorRef mbox)
 
-send :: ActorRef msg -> msg -> IO ()
-send recipient msg = atomically (writeTQueue (refMbox recipient) msg)
+send :: Show msg => ActorRef msg -> msg -> IO ()
+send recipient msg = do
+  print msg
+  atomically (writeTQueue (refMbox recipient) msg)
 
 -- test :: IO ()
 -- test = do
