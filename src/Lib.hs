@@ -13,7 +13,6 @@ import qualified Data.List as FR
 import qualified Downloader as D
 import Control.Concurrent.STM
 import Control.Concurrent
-import Data.List.Split
 
 
 isProcessExisting :: [Process] -> Process -> Bool
@@ -63,6 +62,8 @@ test = do
   saveBookmarksToProcesses
 
   pendingProcesses <- PR.openRepository PR.getPendingProcesses
+
+  -- let pendingProcesses = [Process "1Y1rWCbj7gE" Pending, Process "if7jHQk0YKc" Pending, Process "MjTSw5htw4s" Pending]
 
   Logger.log $ Logger.StartingProcessingLog pendingProcesses
 
