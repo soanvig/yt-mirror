@@ -1,8 +1,8 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Downloader (downloader, DownloaderMsg (..)) where
+module Downloader (downloader, downloadSaver, DownloaderMsg (..)) where
 
-import Actor
+import qualified Actor as A
 import Definitions
 import Youtube
 import qualified ProcessRepository as PR
@@ -15,9 +15,10 @@ import qualified Logger as L
 -- public
 
 newtype DownloaderMsg = DownloaderStart Process deriving (Show)
+data DownloadSaverMsg = DownloadFinished String | DownloadFailed String deriving (Show)
 
-downloader :: TVar Int -> Behaviour DownloaderMsg
-downloader processedCounter = Behaviour $ \case
+downloader :: TVar Int -> A.ActorRef DownloadSaverMsg -> A.Behaviour DownloaderMsg
+downloader processedCounter saverActor = A.Behaviour $ \case
   DownloaderStart process -> do
     let youtubeId = processYoutubeId process
 
@@ -34,12 +35,21 @@ downloader processedCounter = Behaviour $ \case
     
     case exitCode of
         ExitFailure _ -> do
-          PR.openRepository (PR.errorProcess youtubeId)
+          A.send saverActor (DownloadFailed youtubeId)
           L.log $ L.DownloadErrorLog youtubeId
         ExitSuccess -> do
-          PR.openRepository (PR.finishProcess youtubeId)
+          A.send saverActor (DownloadFinished youtubeId)
           L.log $ L.DownloadFinishedLog youtubeId
         
     atomically $ modifyTVar processedCounter (+ 1)
-    return (downloader processedCounter)
+    return (downloader processedCounter saverActor)
+
+downloadSaver :: A.Behaviour DownloadSaverMsg
+downloadSaver = A.Behaviour $ \case
+  DownloadFinished youtubeId -> do
+    PR.openRepository (PR.finishProcess youtubeId)
+    return downloadSaver
+  DownloadFailed youtubeId -> do
+    PR.openRepository (PR.errorProcess youtubeId)
+    return downloadSaver
 

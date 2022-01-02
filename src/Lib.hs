@@ -57,7 +57,8 @@ roundRobin a b = zip a b ++ roundRobin a (drop (length a) b)
 test :: IO ()
 test = do
   processedCounter <- newTVarIO 0
-  downloaderActors <- mapM (\_ -> A.spawn $ D.downloader processedCounter) [1..5]
+  downloadSaverActor <- A.spawn D.downloadSaver
+  downloaderActors <- mapM (\_ -> A.spawn $ D.downloader processedCounter downloadSaverActor) [1..5]
 
   saveBookmarksToProcesses
 
