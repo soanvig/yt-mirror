@@ -7,9 +7,9 @@ module Definitions where
     bookmarkUrl :: String
   } deriving (Show)
 
-  data ProcessState = Pending
-    | InProgress
-    | Processed
+  data ProcessState = ProcessPending
+    | ProcessHasError
+    | ProcessFinished
     deriving (Show, Read)
 
   data Process = Process {
@@ -24,7 +24,7 @@ module Definitions where
 
     return Process {
       processYoutubeId = youtubeId,
-      processState = Pending
+      processState = ProcessPending
     }
 
   isSameProcess :: Process -> Process -> Bool

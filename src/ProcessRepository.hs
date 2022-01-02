@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module ProcessRepository (updateProcessWithState, openRepository, getProcesses, getPendingProcesses, saveProcesses) where
+module ProcessRepository (finishProcess, errorProcess, openRepository, getProcesses, getPendingProcesses, saveProcesses) where
 
 import Database.SQLite.Simple
 import Database.SQLite.Simple.FromField
@@ -49,17 +49,22 @@ openRepository operation = do
 getProcesses :: ReaderT Connection IO [Process]
 getProcesses = do
   conn <- ask
-  lift $ query_ conn "SELECT * FROM process"
+  lift $ query_ conn "SELECT youtubeId, state FROM process"
 
 getPendingProcesses :: ReaderT Connection IO [Process]
 getPendingProcesses = do
   conn <- ask
-  lift $ query conn "SELECT * FROM process WHERE state = (?)" [Pending]
+  lift $ query conn "SELECT youtubeId, state FROM process WHERE state = (?)" [ProcessPending]
 
-updateProcessWithState :: String -> ProcessState -> ReaderT Connection IO ()
-updateProcessWithState youtubeId state = do
+finishProcess :: String -> ReaderT Connection IO ()
+finishProcess youtubeId = do
   conn <- ask
-  lift $ execute conn "UPDATE process SET state = (?) WHERE youtubeId = (?)" (state, youtubeId)
+  lift $ execute conn "UPDATE process SET state = (?) WHERE youtubeId = (?)" (ProcessFinished, youtubeId)
+
+errorProcess :: String -> ReaderT Connection IO ()
+errorProcess youtubeId = do
+  conn <- ask
+  lift $ execute conn "UPDATE process SET state = (?) WHERE youtubeId = (?)" (ProcessHasError, youtubeId)
 
 saveProcesses :: [Process] -> ReaderT Connection IO ()
 saveProcesses [] = return ()

@@ -63,7 +63,12 @@ test = do
 
   pendingProcesses <- PR.openRepository PR.getPendingProcesses
 
-  -- let pendingProcesses = [Process "1Y1rWCbj7gE" Pending, Process "if7jHQk0YKc" Pending, Process "MjTSw5htw4s" Pending]
+  -- let pendingProcesses = [
+        -- Process "5FjWe31S_0g" ProcessPending
+        -- , Process "1Y1rWCbj7gE" ProcessPending 
+        -- , Process "if7jHQk0YKc" ProcessPending 
+        -- , Process "MjTSw5htw4s" ProcessPending
+        -- ]
 
   Logger.log $ Logger.StartingProcessingLog pendingProcesses
 

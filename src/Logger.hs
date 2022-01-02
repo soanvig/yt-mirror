@@ -2,9 +2,12 @@ module Logger where
 
   import Definitions
 
-  data Log = SaveProcessesLog { logNewProcesses :: [Process], logExistingProcesses :: [Process] }
+  data Log = SaveProcessesLog [Process] [Process]
             | FinishedLog {}
-            | StartingProcessingLog { logProcesses :: [Process] }
+            | StartingProcessingLog [Process]
+            | DownloadStartedLog String
+            | DownloadFinishedLog String
+            | DownloadErrorLog String
             deriving (Show)
 
   log :: Log -> IO ()
@@ -19,3 +22,6 @@ module Logger where
   log (StartingProcessingLog processes) = do
     print $ "Starting processing of pending processes: " ++ (show . length) processes
   log FinishedLog = print "Finished processing all processes"
+  log (DownloadStartedLog youtubeId) = print $ "Downloading: " ++ youtubeId
+  log (DownloadFinishedLog youtubeId) = print $ "Downloading finished: " ++ youtubeId
+  log (DownloadErrorLog youtubeId) = print $ "Downloading error: " ++ youtubeId
