@@ -1,5 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-
 module Actor  (ActorRef (), Behaviour (..), spawn, send) where
 
 import Control.Monad

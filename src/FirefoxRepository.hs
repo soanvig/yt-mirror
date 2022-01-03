@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module FirefoxRepository (openRepository, loadBookmarks) where
 
 import Database.SQLite.Simple 

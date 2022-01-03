@@ -1,5 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-
 module Downloader (downloader, downloadSaver, DownloaderMsg (..)) where
 
 import qualified Actor as A
@@ -11,6 +9,16 @@ import Control.Concurrent.STM ( atomically, modifyTVar, TVar )
 import System.IO ( stderr, stdin )
 import System.Exit ( ExitCode(ExitSuccess, ExitFailure) )
 import qualified Logger as L
+import Data.String.Interpolate
+
+getDownloadCommand :: String -> String
+getDownloadCommand youtubeId = [iii|
+youtube-dl
+-x -o "/tmp/%(title)s.%(ext)s"
+-q --no-warnings
+--exec "mv {} ~/music/synchronized/"
+#{youtubeId}
+|]
 
 -- public
 
@@ -24,8 +32,7 @@ downloader processedCounter saverActor = A.Behaviour $ \case
 
     L.log $ L.DownloadStartedLog youtubeId
 
-    let command = "youtube-dl -x -o \"/tmp/%(title)s.%(ext)s\" -q --no-warnings --exec \"mv {} ~/music/synchronized/\" " ++ youtubeId
-    let shellProcess = (shell command) {
+    let shellProcess = (shell $ getDownloadCommand youtubeId) {
         std_in  = UseHandle stdin
       , std_out = CreatePipe
       , std_err = UseHandle stderr

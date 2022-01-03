@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module ProcessRepository (finishProcess, errorProcess, openRepository, getProcesses, getPendingProcesses, saveProcesses) where
 
 import Database.SQLite.Simple
@@ -9,6 +7,7 @@ import Definitions
 import Database.SQLite.Simple.Ok
 import Data.Text (unpack, pack)
 import Control.Monad.Reader
+import Data.String.Interpolate
 
 instance FromField ProcessState where
   fromField f = (parseFieldData . fieldData) f
@@ -28,17 +27,19 @@ instance ToRow Process where
 saveSingleProcess :: Process -> ReaderT Connection IO ()
 saveSingleProcess process = do
   conn <- ask
-  lift $ execute conn "INSERT INTO process (youtubeId, state) VALUES (?, ?)" process
+  lift $ execute conn "INSERT OR IGNORE INTO process (youtubeId, state) VALUES (?, ?)" process
 
 -- Public
 
 openRepository :: ReaderT Connection IO a -> IO a
 openRepository operation = do
   conn <- open "./process.sqlite"
-  execute_ conn "CREATE TABLE IF NOT EXISTS process (\
-    \youtubeId TEXT NOT NULL PRIMARY KEY,\
-    \state TEXT\
-    \)"
+  execute_ conn [iii|
+CREATE TABLE IF NOT EXISTS process (
+  youtubeId TEXT NOT NULL PRIMARY KEY,
+  state TEXT
+)
+|]
 
   result <- runReaderT operation conn
 
@@ -68,7 +69,7 @@ errorProcess youtubeId = do
 
 saveProcesses :: [Process] -> ReaderT Connection IO ()
 saveProcesses [] = return ()
-saveProcesses (x : rest) = do
+saveProcesses (x : xs) = do
   saveSingleProcess x
-  saveProcesses rest
+  saveProcesses xs
   

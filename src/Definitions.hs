@@ -1,32 +1,36 @@
 module Definitions where
 
-  import Youtube
+import Youtube
 
-  data Bookmark = Bookmark {
-    bookmarkTitle :: String,
+data Bookmark = Bookmark
+  { bookmarkTitle :: String,
     bookmarkUrl :: String
-  } deriving (Show)
+  }
+  deriving (Show)
 
-  data ProcessState = ProcessPending
-    | ProcessHasError
-    | ProcessFinished
-    deriving (Show, Read)
+data ProcessState
+  = ProcessPending
+  | ProcessHasError
+  | ProcessFinished
+  deriving (Show, Read)
 
-  data Process = Process {
-    processYoutubeId :: String,
-    processState :: ProcessState 
-  } deriving (Show)
+data Process = Process
+  { processYoutubeId :: String,
+    processState :: ProcessState
+  }
+  deriving (Show)
 
-  newProcess :: Bookmark -> Maybe Process
-  newProcess bookmark = do
-    youtubeUrl <- (toYoutubeUrl . bookmarkUrl) bookmark
-    youtubeId <- getYoutubeId youtubeUrl
+instance Eq Process where
+  (==) p1 p2 = processYoutubeId p1 == processYoutubeId p2
 
-    return Process {
-      processYoutubeId = youtubeId,
-      processState = ProcessPending
-    }
+newProcess :: Bookmark -> Maybe Process
+newProcess bookmark = do
+  youtubeUrl <- (toYoutubeUrl . bookmarkUrl) bookmark
+  youtubeId <- getYoutubeId youtubeUrl
 
-  isSameProcess :: Process -> Process -> Bool
-  isSameProcess p1 p2 = processYoutubeId p1 == processYoutubeId p2
-  
+  return
+    Process
+      { processYoutubeId = youtubeId,
+        processState = ProcessPending
+      }
+
