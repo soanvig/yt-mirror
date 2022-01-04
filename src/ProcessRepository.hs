@@ -1,4 +1,11 @@
-module ProcessRepository (finishProcess, errorProcess, openRepository, getProcesses, getPendingProcesses, saveProcesses) where
+module ProcessRepository (
+  openRepository,
+  finishProcess,
+  errorProcess,
+  getProcesses,
+  getPendingProcesses,
+  saveProcesses
+) where
 
 import Database.SQLite.Simple
 import Database.SQLite.Simple.FromField
@@ -65,7 +72,7 @@ finishProcess youtubeId = do
 errorProcess :: String -> ReaderT Connection IO ()
 errorProcess youtubeId = do
   conn <- ask
-  lift $ execute conn "UPDATE process SET state = (?) WHERE youtubeId = (?)" (ProcessHasError, youtubeId)
+  lift $ execute conn "UPDATE process SET state = (?) WHERE youtubeId = (?)" (ProcessFailed, youtubeId)
 
 saveProcesses :: [Process] -> ReaderT Connection IO ()
 saveProcesses [] = return ()

@@ -1,29 +1,30 @@
-module Actor  (ActorRef (), Behaviour (..), spawn, send) where
+module Actor (
+  ActorRef,
+  Behavior (..),
+  spawn,
+  send
+) where
 
-import Control.Monad
-import Control.Concurrent
+import Control.Concurrent ( forkIO )
 import Control.Concurrent.STM
-import Data.IORef
-import System.IO
 
-data ActorRef msg = ActorRef {
-  refMbox :: TQueue msg
-}
+runBehavior :: Show msg => TQueue msg -> Behavior msg -> IO ()
+runBehavior queue (Behavior b) = do
+  msg <- atomically (readTQueue queue)
+  b msg >>= runBehavior queue
 
-newtype Behaviour msg = Behaviour (msg -> IO (Behaviour msg))
+-- public
 
-go :: Show msg => TQueue msg -> Behaviour msg -> IO ()
-go mbox (Behaviour b) = do
-  msg <- atomically (readTQueue mbox)
-  b msg >>= go mbox
+newtype ActorRef msg = ActorRef (TQueue msg)
 
-spawn :: Show msg => Behaviour msg -> IO (ActorRef msg)
-spawn behaviour = do
-  mvar <- newEmptyMVar 
-  mbox <- newTQueueIO
-  forkIO (go mbox behaviour) 
-  return (ActorRef mbox)
+newtype Behavior msg = Behavior (msg -> IO (Behavior msg))
+
+spawn :: Show msg => Behavior msg -> IO (ActorRef msg)
+spawn behavior = do
+  queue <- newTQueueIO
+  forkIO (runBehavior queue behavior) 
+  return (ActorRef queue)
 
 send :: Show msg => ActorRef msg -> msg -> IO ()
-send recipient msg = atomically (writeTQueue (refMbox recipient) msg)
+send (ActorRef queue) msg = atomically (writeTQueue queue msg)
   

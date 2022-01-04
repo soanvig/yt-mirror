@@ -1,4 +1,8 @@
-module Downloader (downloader, downloadSaver, DownloaderMsg (..)) where
+module Downloader (
+  downloader,
+  downloadSaver,
+  DownloaderMsg (..)
+) where
 
 import qualified Actor as A
 import Definitions
@@ -20,43 +24,43 @@ youtube-dl
 #{youtubeId}
 |]
 
+data DownloadSaverMsg = DownloadFinished String | DownloadFailed String deriving (Show)
+
 -- public
 
 newtype DownloaderMsg = DownloaderStart Process deriving (Show)
-data DownloadSaverMsg = DownloadFinished String | DownloadFailed String deriving (Show)
 
-downloader :: TVar Int -> A.ActorRef DownloadSaverMsg -> A.Behaviour DownloaderMsg
-downloader processedCounter saverActor = A.Behaviour $ \case
+downloader :: A.ActorRef DownloadSaverMsg -> A.Behavior DownloaderMsg
+downloader saverActor = A.Behavior $ \case
   DownloaderStart process -> do
     let youtubeId = processYoutubeId process
 
-    L.log $ L.DownloadStartedLog youtubeId
+    L.log (L.DownloadStarted youtubeId)
 
     let shellProcess = (shell $ getDownloadCommand youtubeId) {
-        std_in  = UseHandle stdin
-      , std_out = CreatePipe
-      , std_err = UseHandle stderr
+        std_in  = UseHandle stdin,
+        std_out = CreatePipe,
+        std_err = UseHandle stderr
       }
 
     exitCode <- withCreateProcess shellProcess $ \_ _ _ p -> waitForProcess p
     
     case exitCode of
-        ExitFailure _ -> do
-          A.send saverActor (DownloadFailed youtubeId)
-          L.log $ L.DownloadErrorLog youtubeId
-        ExitSuccess -> do
-          A.send saverActor (DownloadFinished youtubeId)
-          L.log $ L.DownloadFinishedLog youtubeId
-        
-    atomically $ modifyTVar processedCounter (+ 1)
-    return (downloader processedCounter saverActor)
+      ExitFailure _ -> A.send saverActor (DownloadFailed youtubeId)
+      ExitSuccess -> A.send saverActor (DownloadFinished youtubeId)
+    
+    return (downloader saverActor)
 
-downloadSaver :: A.Behaviour DownloadSaverMsg
-downloadSaver = A.Behaviour $ \case
+downloadSaver :: TVar Int -> A.Behavior DownloadSaverMsg
+downloadSaver processedCounter = A.Behavior $ \case
   DownloadFinished youtubeId -> do
     PR.openRepository (PR.finishProcess youtubeId)
-    return downloadSaver
+    atomically $ modifyTVar processedCounter (+ 1)
+    L.log (L.DownloadFinished youtubeId)
+    return (downloadSaver processedCounter)
   DownloadFailed youtubeId -> do
     PR.openRepository (PR.errorProcess youtubeId)
-    return downloadSaver
+    atomically $ modifyTVar processedCounter (+ 1)
+    L.log (L.DownloadError youtubeId)
+    return (downloadSaver processedCounter)
 

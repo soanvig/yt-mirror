@@ -1,35 +1,37 @@
-module Lib where
+module Lib (
+  run
+) where
 
 import Definitions
 import qualified FirefoxRepository as FR
 import qualified ProcessRepository as PR
 import Data.Maybe (mapMaybe)
 import Data.List (nub)
-import Control.Monad.Reader
 import Database.SQLite.Simple (Connection)
 import qualified Actor as A
-import qualified Logger
+import qualified Logger as L
 import qualified Data.List as FR
 import qualified Downloader as D
 import Control.Concurrent.STM
-import Control.Concurrent
 import Helpers
 
-saveBookmarksToProcesses :: IO ()
-saveBookmarksToProcesses = do
-  bookmarks <- FR.openRepository "./places.sqlite" FR.loadBookmarks
-  let processes = mapMaybe newProcess bookmarks
+saveBookmarksToProcesses :: String -> IO ()
+saveBookmarksToProcesses placesLocation = do
+  bookmarks <- FR.openRepository placesLocation FR.loadBookmarks
+  let processes = mapMaybe bookmarkToProcess bookmarks
   PR.openRepository (PR.saveProcesses processes)
 
-test :: IO ()
-test = do
+-- public
+
+run :: IO ()
+run = do
   processedCounter <- newTVarIO 0
-  downloadSaverActor <- A.spawn D.downloadSaver
-  downloaderActors <- mapM (\_ -> A.spawn $ D.downloader processedCounter downloadSaverActor) [1..5]
+  downloadSaverActor <- A.spawn $ D.downloadSaver processedCounter
+  downloaderActors <- mapM (\_ -> A.spawn $ D.downloader downloadSaverActor) [1..5]
 
-  Logger.log Logger.SavingProcesses
+  L.log L.ProcessSavingStarted
 
-  saveBookmarksToProcesses
+  saveBookmarksToProcesses "./places.sqlite"
 
   pendingProcesses <- PR.openRepository PR.getPendingProcesses
 
@@ -40,7 +42,7 @@ test = do
         -- , Process "MjTSw5htw4s" ProcessPending
         -- ]
 
-  Logger.log $ Logger.StartingProcessingLog pendingProcesses
+  L.log (L.ProcessingStarted pendingProcesses)
 
   let actorsWithProcesses = roundRobin downloaderActors pendingProcesses
 
@@ -48,5 +50,5 @@ test = do
 
   waitFor (length pendingProcesses) (==) processedCounter
 
-  Logger.log Logger.FinishedLog
+  L.log L.Finished
 

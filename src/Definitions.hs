@@ -10,7 +10,7 @@ data Bookmark = Bookmark
 
 data ProcessState
   = ProcessPending
-  | ProcessHasError
+  | ProcessFailed
   | ProcessFinished
   deriving (Show, Read)
 
@@ -23,8 +23,8 @@ data Process = Process
 instance Eq Process where
   (==) p1 p2 = processYoutubeId p1 == processYoutubeId p2
 
-newProcess :: Bookmark -> Maybe Process
-newProcess bookmark = do
+bookmarkToProcess :: Bookmark -> Maybe Process
+bookmarkToProcess bookmark = do
   youtubeId <- (getYoutubeId . bookmarkUrl) bookmark
 
   return (Process youtubeId ProcessPending)

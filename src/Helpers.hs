@@ -10,18 +10,15 @@ roundRobin [] _ = []
 roundRobin _ [] = []
 roundRobin a b = zip a b ++ roundRobin a (drop (length a) b)
 
-notF :: (a -> Bool) -> a -> Bool
-notF f x = not $ f x
-
 waitFor :: Eq a => a -> (a -> a -> Bool) -> TVar a -> IO ()
 waitFor expectedValue eq var = do
-  threadDelay $ 5 * 1000000 -- 5 seconds
-  currentValue <- readTVarIO var
+   threadDelay $ 5 * 1000000 -- 5 seconds
+   currentValue <- readTVarIO var
 
-  if eq currentValue expectedValue then
-     return ()
-  else
-     waitFor expectedValue eq var
+   if eq currentValue expectedValue then
+      return ()
+   else
+      waitFor expectedValue eq var
 
 maybeCondition :: (a -> Bool) -> a -> Maybe a
 maybeCondition cond x = if cond x then Just x else Nothing;

@@ -1,8 +1,10 @@
-module Youtube (getYoutubeId) where
+module Youtube (
+  getYoutubeId
+) where
 
 import Network.URI
 import Helpers
-import Data.List.Split
+import Data.List.Split ( splitOn )
 
 isYoutubeHost :: URIAuth -> Bool
 isYoutubeHost auth = uriRegName auth == "youtube.com" || uriRegName auth == "www.youtube.com"
