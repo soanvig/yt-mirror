@@ -11,6 +11,7 @@ isYoutubeHost auth = uriRegName auth == "youtube.com" || uriRegName auth == "www
 
 parseQuery :: String -> [(String, String)]
 parseQuery ('?' : xs) = parseQuery xs
+parseQuery "" = []
 parseQuery query =  (fmap parseParam . getParams) query
   where
     getParams = splitOn "&"
