@@ -22,3 +22,6 @@ waitFor expectedValue eq var = do
      return ()
   else
      waitFor expectedValue eq var
+
+maybeCondition :: (a -> Bool) -> a -> Maybe a
+maybeCondition cond x = if cond x then Just x else Nothing;

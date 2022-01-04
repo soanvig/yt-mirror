@@ -25,12 +25,7 @@ instance Eq Process where
 
 newProcess :: Bookmark -> Maybe Process
 newProcess bookmark = do
-  youtubeUrl <- (toYoutubeUrl . bookmarkUrl) bookmark
-  youtubeId <- getYoutubeId youtubeUrl
+  youtubeId <- (getYoutubeId . bookmarkUrl) bookmark
 
-  return
-    Process
-      { processYoutubeId = youtubeId,
-        processState = ProcessPending
-      }
+  return (Process youtubeId ProcessPending)
 

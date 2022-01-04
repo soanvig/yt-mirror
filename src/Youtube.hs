@@ -1,25 +1,35 @@
-module Youtube (getYoutubeId, toYoutubeUrl) where
+module Youtube (getYoutubeId) where
 
-import Network.URL
-import Data.Maybe ()
+import Network.URI
+import Helpers
+import Data.List.Split
 
-fromCondition :: (a -> Bool) -> a -> Maybe a
-fromCondition cond x = if cond x then Just x else Nothing;
+isYoutubeHost :: URIAuth -> Bool
+isYoutubeHost auth = uriRegName auth == "youtube.com" || uriRegName auth == "www.youtube.com"
 
-isYoutubeHost :: URLType -> Bool
-isYoutubeHost (Absolute h) = host h == "youtube.com" || host h == "www.youtube.com"
-isYoutubeHost _ = False
+parseQuery :: String -> [(String, String)]
+parseQuery ('?' : xs) = parseQuery xs
+parseQuery query =  (fmap parseParam . getParams) query
+  where
+    getParams = splitOn "&"
+    parseParam = toTuple . splitOn "="
+    toTuple [name, value] = (name, value)
+    toTuple _ = undefined -- unreachable
+
+toYoutubeUrl :: String -> Maybe URI
+toYoutubeUrl url = parseURI url >>= (
+  \parsedUrl -> uriAuthority parsedUrl
+    >>= maybeCondition isYoutubeHost
+    >> Just parsedUrl
+  )
+
+findYoutubeId :: [(String, String)] -> Maybe String
+findYoutubeId [] = Nothing
+findYoutubeId (("v", youtubeId) : rest) = Just youtubeId
+findYoutubeId ((x, y) : rest) = findYoutubeId rest
 
 -- Public
 
-toYoutubeUrl :: String -> Maybe String
-toYoutubeUrl url = importURL url >>= fromCondition (isYoutubeHost . url_type) >> Just url
-
 getYoutubeId :: String -> Maybe String
-getYoutubeId url = importURL url >>= (findYoutubeId . url_params)
-  where
-    findYoutubeId :: [(String, String)] -> Maybe String
-    findYoutubeId [] = Nothing
-    findYoutubeId (("v", youtubeId) : rest) = Just youtubeId
-    findYoutubeId ((x, y) : rest) = findYoutubeId rest
-
+getYoutubeId url = toYoutubeUrl url >>= (findYoutubeId . parseQuery . uriQuery)
+    

@@ -29,6 +29,8 @@ library
                     , process
                     , stm
                     , string-interpolate
+                    , network-uri
+                    , split
 
   default-language:    Haskell2010
 
