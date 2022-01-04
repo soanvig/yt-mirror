@@ -27,7 +27,7 @@ run :: IO ()
 run = do
   processedCounter <- newTVarIO 0
   downloadSaverActor <- A.spawn $ D.downloadSaver processedCounter
-  downloaderActors <- mapM (\_ -> A.spawn $ D.downloader downloadSaverActor) [1..5]
+  downloaderActors <- mapM (\_ -> A.spawn $ D.downloader downloadSaverActor) [1..10]
 
   L.log L.ProcessSavingStarted
 

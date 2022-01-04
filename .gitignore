@@ -1,3 +1,4 @@
 *.sqlite*
 dist-newstyle
 .#*
+*.log
