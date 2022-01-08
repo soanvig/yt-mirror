@@ -25,9 +25,13 @@ saveBookmarksToProcesses placesLocation = do
 
 run :: IO ()
 run = do
+  let actorCount = 10
+  let actorIds = fmap (\x -> A.ActorId x (getRandomString 5 x)) [1..actorCount]
   processedCounter <- newTVarIO 0
-  downloadSaverActor <- A.spawn $ D.downloadSaver processedCounter
-  downloaderActors <- mapM (\_ -> A.spawn $ D.downloader downloadSaverActor) [1..10]
+  downloadSaverActor <- A.spawn (D.downloadSaver processedCounter)
+  downloaderActors <- mapM
+    (A.spawn  . D.downloader downloadSaverActor)
+    actorIds
 
   L.log L.ProcessSavingStarted
 
@@ -36,13 +40,13 @@ run = do
   pendingProcesses <- PR.openRepository PR.getPendingProcesses
 
   -- let pendingProcesses = [
-        -- Process "-gtZQ2xgcBE" ProcessPending
-        -- , Process "1Y1rWCbj7gE" ProcessPending 
-        -- , Process "if7jHQk0YKc" ProcessPending 
-        -- , Process "MjTSw5htw4s" ProcessPending
-        -- ]
+  --       Process "-gtZQ2xgcBE" ProcessPending
+  --       , Process "1Y1rWCbj7gE" ProcessPending 
+  --       , Process "if7jHQk0YKc" ProcessPending 
+  --       , Process "MjTSw5htw4s" ProcessPending
+  --       ]
 
-  L.log (L.ProcessingStarted pendingProcesses)
+  L.log (L.ProcessingStarted actorCount pendingProcesses)
 
   let actorsWithProcesses = roundRobin downloaderActors pendingProcesses
 

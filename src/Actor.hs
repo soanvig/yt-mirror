@@ -1,5 +1,6 @@
 module Actor (
   ActorRef,
+  ActorId (..),
   Behavior (..),
   spawn,
   send
@@ -15,9 +16,9 @@ runBehavior queue (Behavior b) = do
 
 -- public
 
-newtype ActorRef msg = ActorRef (TQueue msg)
-
+data ActorId = ActorId Int String deriving (Show)
 newtype Behavior msg = Behavior (msg -> IO (Behavior msg))
+newtype ActorRef msg = ActorRef (TQueue msg)
 
 spawn :: Show msg => Behavior msg -> IO (ActorRef msg)
 spawn behavior = do

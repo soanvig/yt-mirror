@@ -2,6 +2,7 @@ module Helpers where
 
 import Control.Concurrent.STM (TVar, readTVarIO)
 import Control.Concurrent (threadDelay)
+import System.Random
 
 -- Round robins b over a
 roundRobin :: [a] -> [b] -> [(a, b)]
@@ -22,3 +23,7 @@ waitFor expectedValue eq var = do
 
 maybeCondition :: (a -> Bool) -> a -> Maybe a
 maybeCondition cond x = if cond x then Just x else Nothing;
+
+getRandomString :: Int -> Int -> String
+getRandomString length seed = take length $ randomRs ('a', 'z') (mkStdGen seed)
+
