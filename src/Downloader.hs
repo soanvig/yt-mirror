@@ -15,14 +15,18 @@ import System.Exit ( ExitCode(ExitSuccess, ExitFailure) )
 import qualified Logger as L
 import Data.String.Interpolate
 
-getDownloadCommand :: String -> String
-getDownloadCommand youtubeId = [iii|
-youtube-dl
--x -o "/tmp/%(title)s.%(ext)s"
--q --no-warnings
---exec "mv {} ~/music/synchronized/"
-#{youtubeId}
-|]
+getDownloadParams :: String -> [String]
+getDownloadParams youtubeId = [
+  "-x",
+  "-o",
+  "/tmp/%(title)s.%(ext)s",
+  "-q",
+  "--no-warnings",
+  "--exec",
+  "mv {} ~/music/synchronized/",
+  "--",
+  youtubeId
+  ]
 
 data DownloadSaverMsg = DownloadFinished String | DownloadFailed String deriving (Show)
 
@@ -37,7 +41,7 @@ downloader saverActor = A.Behavior $ \case
 
     L.log (L.DownloadStarted youtubeId)
 
-    let shellProcess = (shell $ getDownloadCommand youtubeId) {
+    let shellProcess = (proc "youtube-dl" (getDownloadParams youtubeId)) {
         std_in  = UseHandle stdin,
         std_out = CreatePipe,
         std_err = UseHandle stderr
