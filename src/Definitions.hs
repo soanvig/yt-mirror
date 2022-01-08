@@ -16,7 +16,8 @@ data ProcessState
 
 data Process = Process
   { processYoutubeId :: String,
-    processState :: ProcessState
+    processState :: ProcessState,
+    processError :: Maybe String
   }
   deriving (Show)
 
@@ -27,5 +28,5 @@ bookmarkToProcess :: Bookmark -> Maybe Process
 bookmarkToProcess bookmark = do
   youtubeId <- (getYoutubeId . bookmarkUrl) bookmark
 
-  return (Process youtubeId ProcessPending)
+  return (Process youtubeId ProcessPending Nothing)
 

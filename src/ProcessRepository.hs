@@ -26,15 +26,15 @@ instance ToField ProcessState where
   toField state = SQLText . pack . show $ state
 
 instance FromRow Process where
-  fromRow = Process <$> field <*> field
+  fromRow = Process <$> field <*> field <*> field
 
 instance ToRow Process where
-  toRow (Process youtubeId state) = toRow (youtubeId, state)
+  toRow (Process youtubeId state errorMessage) = toRow (youtubeId, state, errorMessage)
 
 saveSingleProcess :: Process -> ReaderT Connection IO ()
 saveSingleProcess process = do
   conn <- ask
-  lift $ execute conn "INSERT OR IGNORE INTO process (youtubeId, state) VALUES (?, ?)" process
+  lift $ execute conn "INSERT OR IGNORE INTO process (youtubeId, state, errorMessage) VALUES (?, ?, ?)" process
 
 -- Public
 
@@ -44,7 +44,8 @@ openRepository operation = do
   execute_ conn [iii|
 CREATE TABLE IF NOT EXISTS process (
   youtubeId TEXT NOT NULL PRIMARY KEY,
-  state TEXT
+  state TEXT NOT NULL,
+  errorMessage TEXT
 )
 |]
 
@@ -69,10 +70,10 @@ finishProcess youtubeId = do
   conn <- ask
   lift $ execute conn "UPDATE process SET state = (?) WHERE youtubeId = (?)" (ProcessFinished, youtubeId)
 
-errorProcess :: String -> ReaderT Connection IO ()
-errorProcess youtubeId = do
+errorProcess :: String -> String -> ReaderT Connection IO ()
+errorProcess youtubeId errorMessage = do
   conn <- ask
-  lift $ execute conn "UPDATE process SET state = (?) WHERE youtubeId = (?)" (ProcessFailed, youtubeId)
+  lift $ execute conn "UPDATE process SET state = (?), errorMessage = (?) WHERE youtubeId = (?)" (ProcessFailed, errorMessage, youtubeId)
 
 saveProcesses :: [Process] -> ReaderT Connection IO ()
 saveProcesses [] = return ()

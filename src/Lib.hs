@@ -23,16 +23,16 @@ saveBookmarksToProcesses placesLocation = do
 
 testProcesses :: [Process]
 testProcesses = [
-        Process "-gtZQ2xgcBE" ProcessPending -- works
-        , Process "vtC8sSWuPY0" ProcessPending -- error
-        , Process "MBW3Jo9yoxo" ProcessPending -- works
-        , Process "hiPXP7nIVtI" ProcessPending -- error
+        Process "-gtZQ2xgcBE" ProcessPending Nothing -- works
+        , Process "vtC8sSWuPY0" ProcessPending Nothing -- error
+        , Process "MBW3Jo9yoxo" ProcessPending Nothing -- works
+        , Process "hiPXP7nIVtI" ProcessPending Nothing -- error
         ]
 
 getPendingProcesses :: IO [Process]
 getPendingProcesses = do
-  PR.openRepository PR.getPendingProcesses
-  -- testProcesses
+  -- PR.openRepository PR.getPendingProcesses
+  return testProcesses
   
 -- public
 
