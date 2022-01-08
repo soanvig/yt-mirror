@@ -3,6 +3,7 @@ module Actor (
   ActorId (..),
   Behavior (..),
   spawn,
+  spawnWithBox,
   send
 ) where
 
@@ -23,6 +24,10 @@ newtype ActorRef msg = ActorRef (TQueue msg)
 spawn :: Show msg => Behavior msg -> IO (ActorRef msg)
 spawn behavior = do
   queue <- newTQueueIO
+  spawnWithBox queue behavior
+
+spawnWithBox :: Show msg => TQueue msg -> Behavior msg -> IO (ActorRef msg)
+spawnWithBox queue behavior = do
   forkIO (runBehavior queue behavior) 
   return (ActorRef queue)
 

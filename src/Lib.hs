@@ -21,31 +21,38 @@ saveBookmarksToProcesses placesLocation = do
   let processes = mapMaybe bookmarkToProcess bookmarks
   PR.openRepository (PR.saveProcesses processes)
 
+testProcesses :: [Process]
+testProcesses = [
+        Process "-gtZQ2xgcBE" ProcessPending -- works
+        , Process "vtC8sSWuPY0" ProcessPending -- error
+        , Process "MBW3Jo9yoxo" ProcessPending -- works
+        , Process "hiPXP7nIVtI" ProcessPending -- error
+        ]
+
+getPendingProcesses :: IO [Process]
+getPendingProcesses = do
+  PR.openRepository PR.getPendingProcesses
+  -- testProcesses
+  
 -- public
 
 run :: IO ()
 run = do
-  let actorCount = 10
+  let actorCount = 2
   let actorIds = fmap (\x -> A.ActorId x (getRandomString 5 x)) [1..actorCount]
   processedCounter <- newTVarIO 0
+  downloaderBox <- newTQueueIO
   downloadSaverActor <- A.spawn (D.downloadSaver processedCounter)
   downloaderActors <- mapM
-    (A.spawn  . D.downloader downloadSaverActor)
+    (A.spawnWithBox downloaderBox  . D.downloader downloadSaverActor)
     actorIds
 
   L.log L.ProcessSavingStarted
 
   saveBookmarksToProcesses "./places.sqlite"
 
-  pendingProcesses <- PR.openRepository PR.getPendingProcesses
-
-  -- let pendingProcesses = [
-  --       Process "-gtZQ2xgcBE" ProcessPending
-  --       , Process "1Y1rWCbj7gE" ProcessPending 
-  --       , Process "if7jHQk0YKc" ProcessPending 
-  --       , Process "MjTSw5htw4s" ProcessPending
-  --       ]
-
+  pendingProcesses <- getPendingProcesses
+  
   L.log (L.ProcessingStarted actorCount pendingProcesses)
 
   let actorsWithProcesses = roundRobin downloaderActors pendingProcesses
