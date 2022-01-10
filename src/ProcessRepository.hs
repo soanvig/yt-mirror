@@ -38,9 +38,9 @@ saveSingleProcess process = do
 
 -- Public
 
-openRepository :: ReaderT Connection IO a -> IO a
-openRepository operation = do
-  conn <- open "./process.sqlite"
+openRepository :: FilePath -> ReaderT Connection IO a -> IO a
+openRepository processPath operation = do
+  conn <- open processPath
   execute_ conn [iii|
 CREATE TABLE IF NOT EXISTS process (
   youtubeId TEXT NOT NULL PRIMARY KEY,
@@ -58,12 +58,12 @@ CREATE TABLE IF NOT EXISTS process (
 getProcesses :: ReaderT Connection IO [Process]
 getProcesses = do
   conn <- ask
-  lift $ query_ conn "SELECT youtubeId, state FROM process"
+  lift $ query_ conn "SELECT youtubeId, state, errorMessage FROM process"
 
 getPendingProcesses :: ReaderT Connection IO [Process]
 getPendingProcesses = do
   conn <- ask
-  lift $ query conn "SELECT youtubeId, state FROM process WHERE state = (?)" [ProcessPending]
+  lift $ query conn "SELECT youtubeId, state, errorMessage FROM process WHERE state = (?)" [ProcessPending]
 
 finishProcess :: String -> ReaderT Connection IO ()
 finishProcess youtubeId = do
