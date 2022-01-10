@@ -11,11 +11,12 @@ import Data.Time.LocalTime (getZonedTime)
 
 data Log
   = Finished
-  | ProcessingStarted Int [Process]
-  | DownloadStarted String ActorId
-  | DownloadFinished String ActorId
-  | DownloadError String ActorId
-  | ProcessSavingStarted
+  | AllSynchronizationStarted Int [Process]
+  | SynchronizationStarted String ActorId
+  | SynchronizationFinished String ActorId
+  | SynchronizationError String ActorId
+  | PreparingStarted Int
+  | PreparingFinished
   deriving (Show)
 
 actorColors = do
@@ -35,22 +36,27 @@ printActor (ActorId n id) text = do
 
 log :: Log -> IO ()
 
-log (ProcessingStarted actorCount processes) = do
-  putStrLn ([iii|Starting processing of #{length processes} pending processes using #{actorCount} actors|] :: String)
+log (AllSynchronizationStarted actorCount processes) = do
+  putStrLn ([iii|Starting synchronizing of #{length processes} pending bookmarks using #{actorCount} actors.|] :: String)
   
 log Finished = do
-  putStrLn "Finished processing all processes"
+  setSGR [SetColor Foreground Vivid Green]
+  putStrLn "Finished synchronizing all bookmarks."
+  setSGR [Reset]
 
-log (DownloadStarted youtubeId actorId) = do
-  printActor actorId [iii|Downloading: #{youtubeId}|]
+log (SynchronizationStarted youtubeId actorId) = do
+  printActor actorId [iii|Downloading: #{youtubeId}.|]
 
-log (DownloadFinished youtubeId actorId) = do
-  printActor actorId [iii|Downloading finished: #{youtubeId}|]
+log (SynchronizationFinished youtubeId actorId) = do
+  printActor actorId [iii|Downloading finished: #{youtubeId}.|]
 
-log (DownloadError youtubeId actorId) = do
-  printActor actorId [iii|Downloading error: #{youtubeId}|]
+log (SynchronizationError youtubeId actorId) = do
+  printActor actorId [iii|Downloading error: #{youtubeId}.|]
 
-log ProcessSavingStarted = do
-  setSGR [SetColor Foreground Vivid Red]
-  putStrLn "Preparing bookmarks for processing. This may take a while..."
+log (PreparingStarted bookmarksCount) = do
+  putStrLn [iii|Preparing bookmarks (overall Youtube bookmarks: #{bookmarksCount}) for synchronization.|]
+
+log PreparingFinished = do
+  setSGR [SetColor Foreground Vivid Green]
+  putStrLn "Bookmarks prepared!"
   setSGR [Reset]

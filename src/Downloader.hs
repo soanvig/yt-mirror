@@ -29,7 +29,7 @@ getDownloadParams youtubeId = [
   , youtubeId
   ]
 
-data DownloadSaverMsg = DownloadFinished String
+data DownloadSaverMsg = SynchronizationFinished String
   | DownloadFailed String String
   deriving (Show)
 
@@ -42,7 +42,7 @@ downloader saverActor currentActorId = A.Behavior $ \case
   DownloaderStart process -> do
     let youtubeId = processYoutubeId process
                     
-    L.log (L.DownloadStarted youtubeId currentActorId)
+    L.log (L.SynchronizationStarted youtubeId currentActorId)
 
     let shellProcess = (proc "youtube-dl" (getDownloadParams youtubeId)) {
           std_in  = UseHandle stdin,
@@ -65,21 +65,21 @@ downloader saverActor currentActorId = A.Behavior $ \case
     case exitCode of
       ExitFailure _ -> do
         A.send saverActor (DownloadFailed youtubeId errorMessage)
-        L.log (L.DownloadError youtubeId currentActorId)
+        L.log (L.SynchronizationError youtubeId currentActorId)
       ExitSuccess -> do
-        A.send saverActor (DownloadFinished youtubeId)
-        L.log (L.DownloadFinished youtubeId currentActorId)
+        A.send saverActor (SynchronizationFinished youtubeId)
+        L.log (L.SynchronizationFinished youtubeId currentActorId)
     
     return (downloader saverActor currentActorId)
 
-downloadSaver :: TVar Int -> A.Behavior DownloadSaverMsg
-downloadSaver processedCounter = A.Behavior $ \case
-  DownloadFinished youtubeId -> do
-    PR.openRepository (PR.finishProcess youtubeId)
+downloadSaver :: FilePath -> TVar Int -> A.Behavior DownloadSaverMsg
+downloadSaver processPath processedCounter = A.Behavior $ \case
+  SynchronizationFinished youtubeId -> do
+    PR.openRepository processPath (PR.finishProcess youtubeId)
     atomically $ modifyTVar processedCounter (+ 1)
-    return (downloadSaver processedCounter)
+    return (downloadSaver processPath processedCounter)
   DownloadFailed youtubeId errorMessage -> do
-    PR.openRepository (PR.errorProcess youtubeId (trim errorMessage))
+    PR.openRepository processPath (PR.errorProcess youtubeId (trim errorMessage))
     atomically $ modifyTVar processedCounter (+ 1)
-    return (downloadSaver processedCounter)
+    return (downloadSaver processPath processedCounter)
 

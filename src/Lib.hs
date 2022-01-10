@@ -1,5 +1,6 @@
 module Lib (
-  run
+  prepare,
+  synchronize
 ) where
 
 import Definitions
@@ -15,45 +16,47 @@ import qualified Downloader as D
 import Control.Concurrent.STM
 import Helpers
 
-saveBookmarksToProcesses :: String -> IO ()
-saveBookmarksToProcesses placesLocation = do
-  bookmarks <- FR.openRepository placesLocation FR.loadBookmarks
-  let processes = mapMaybe bookmarkToProcess bookmarks
-  PR.openRepository (PR.saveProcesses processes)
-
 testProcesses :: [Process]
 testProcesses = [
-        Process "-gtZQ2xgcBE" ProcessPending Nothing -- works
-        , Process "vtC8sSWuPY0" ProcessPending Nothing -- error
-        , Process "MBW3Jo9yoxo" ProcessPending Nothing -- works
-        , Process "hiPXP7nIVtI" ProcessPending Nothing -- error
-        ]
+  Process "-gtZQ2xgcBE" ProcessPending Nothing -- works
+  , Process "vtC8sSWuPY0" ProcessPending Nothing -- error
+  , Process "MBW3Jo9yoxo" ProcessPending Nothing -- works
+  , Process "hiPXP7nIVtI" ProcessPending Nothing -- error
+  ]
 
-getPendingProcesses :: IO [Process]
-getPendingProcesses = do
-  -- PR.openRepository PR.getPendingProcesses
-  return testProcesses
+getPendingProcesses :: FilePath -> IO [Process]
+getPendingProcesses processPath = do
+  PR.openRepository processPath PR.getPendingProcesses
+  -- return testProcesses
   
 -- public
 
-run :: IO ()
-run = do
+prepare :: FilePath -> FilePath -> IO ()
+prepare bookmarksPath processPath = do
+  bookmarks <- FR.openRepository bookmarksPath FR.loadBookmarks
+
+  L.log $ L.PreparingStarted (length bookmarks)
+
+  let processes = mapMaybe bookmarkToProcess bookmarks
+  PR.openRepository processPath (PR.saveProcesses processes)
+
+  L.log L.PreparingFinished
+
+synchronize :: FilePath -> IO ()
+synchronize processPath = do
   let actorCount = 2
   let actorIds = fmap (\x -> A.ActorId x (getRandomString 5 x)) [1..actorCount]
+
   processedCounter <- newTVarIO 0
   downloaderBox <- newTQueueIO
-  downloadSaverActor <- A.spawn (D.downloadSaver processedCounter)
+  downloadSaverActor <- A.spawn (D.downloadSaver processPath processedCounter)
   downloaderActors <- mapM
     (A.spawnWithBox downloaderBox  . D.downloader downloadSaverActor)
     actorIds
 
-  L.log L.ProcessSavingStarted
-
-  saveBookmarksToProcesses "./places.sqlite"
-
-  pendingProcesses <- getPendingProcesses
+  pendingProcesses <- getPendingProcesses processPath
   
-  L.log (L.ProcessingStarted actorCount pendingProcesses)
+  L.log (L.AllSynchronizationStarted actorCount pendingProcesses)
 
   let actorsWithProcesses = roundRobin downloaderActors pendingProcesses
 
