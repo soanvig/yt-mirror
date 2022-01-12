@@ -41,7 +41,7 @@ data SynchronizeOptions = SynchronizeOptions {
 data PrepareOptions = PrepareOptions { prepareProcesses :: String, prepareBookmarks :: String }
 
 prepare :: PrepareOptions -> IO ()
-prepare (PrepareOptions bookmarksPath processPath) = do
+prepare (PrepareOptions processPath bookmarksPath) = do
   bookmarks <- FR.openRepository bookmarksPath FR.loadBookmarks
 
   L.log $ L.PreparingStarted (length bookmarks)
@@ -60,7 +60,7 @@ synchronize (SynchronizeOptions processPath tmpDir targetDir) = do
   downloaderBox <- newTQueueIO
   downloadSaverActor <- A.spawn (D.downloadSaver processPath processedCounter)
   downloaderActors <- mapM
-    (A.spawnWithBox downloaderBox  . D.downloader downloadSaverActor)
+    (A.spawnWithBox downloaderBox  . D.downloader downloadSaverActor tmpDir targetDir)
     actorIds
 
   pendingProcesses <- getPendingProcesses processPath
