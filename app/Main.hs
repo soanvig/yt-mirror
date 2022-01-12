@@ -11,5 +11,5 @@ main = do
   command <- getCommand 
 
   case command of
-    Prepare (PrepareOptions processPath bookmarksPath) -> prepare bookmarksPath processPath 
-    Synchronize (SynchronizeOptions processPath) -> synchronize processPath 
+    Prepare prepareOptions -> prepare prepareOptions
+    Synchronize synchronizeOptions -> synchronize synchronizeOptions 
