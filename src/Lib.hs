@@ -1,6 +1,8 @@
 module Lib (
-  prepare,
-  synchronize
+  prepare
+  , synchronize
+  , SynchronizeOptions(..)
+  , PrepareOptions(..)
 ) where
 
 import Definitions
@@ -31,8 +33,15 @@ getPendingProcesses processPath = do
   
 -- public
 
-prepare :: FilePath -> FilePath -> IO ()
-prepare bookmarksPath processPath = do
+data SynchronizeOptions = SynchronizeOptions {
+  synchronizeProcesses :: String
+  , synchronizeTmpDir :: String
+  , synchronizeTargetDir :: String
+}
+data PrepareOptions = PrepareOptions { prepareProcesses :: String, prepareBookmarks :: String }
+
+prepare :: PrepareOptions -> IO ()
+prepare (PrepareOptions processPath bookmarksPath) = do
   bookmarks <- FR.openRepository bookmarksPath FR.loadBookmarks
 
   L.log $ L.PreparingStarted (length bookmarks)
@@ -42,8 +51,8 @@ prepare bookmarksPath processPath = do
 
   L.log L.PreparingFinished
 
-synchronize :: FilePath -> IO ()
-synchronize processPath = do
+synchronize :: SynchronizeOptions -> IO ()
+synchronize (SynchronizeOptions processPath tmpDir targetDir) = do
   let actorCount = 2
   let actorIds = fmap (\x -> A.ActorId x (getRandomString 5 x)) [1..actorCount]
 
@@ -51,7 +60,7 @@ synchronize processPath = do
   downloaderBox <- newTQueueIO
   downloadSaverActor <- A.spawn (D.downloadSaver processPath processedCounter)
   downloaderActors <- mapM
-    (A.spawnWithBox downloaderBox  . D.downloader downloadSaverActor)
+    (A.spawnWithBox downloaderBox  . D.downloader downloadSaverActor tmpDir targetDir)
     actorIds
 
   pendingProcesses <- getPendingProcesses processPath

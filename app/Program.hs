@@ -1,15 +1,13 @@
 module Program (
-  PrepareOptions(..)
-  , SynchronizeOptions(..)
-  , Command (..)
+  Command (..)
   , getCommand
 ) where
 
 import Options.Applicative
+import Lib
 import Data.Semigroup ((<>))
 
-newtype SynchronizeOptions = SynchronizeOptions { synchronizeProcesses :: String }
-data PrepareOptions = PrepareOptions { prepareProcesses :: String, prepareBookmarks :: String }
+
 data Command = Prepare PrepareOptions | Synchronize SynchronizeOptions
 
 prepareOptionsParser :: Parser PrepareOptions
@@ -34,6 +32,18 @@ synchronizeOptionsParser = SynchronizeOptions <$>
     <> short 'p'
     <> metavar "FILE"
     <> help "Location for processes database (created automatically if doesn't exist)"
+  )
+  <*> strOption (
+    long "target"
+    <> short 't'
+    <> metavar "DIRECTORY"
+    <> help "Path to a directory into which music files will be downloaded"
+  )
+  <*> strOption (
+    long "tmp"
+    <> metavar "DIRECTORY"
+    <> value "/tmp"
+    <> help "Path to a directory in which temporary files will be stored (default: /tmp)"
   )
 
 prepareOptions :: Parser Command

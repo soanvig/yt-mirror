@@ -16,15 +16,15 @@ import qualified Logger as L
 import Data.String.Interpolate
 import Helpers
 
-getDownloadParams :: String -> [String]
-getDownloadParams youtubeId = [
+getDownloadParams :: String -> FilePath -> FilePath -> [String]
+getDownloadParams youtubeId tmpDir targetDir = [
   "-x"
   , "-o"
-  , "/tmp/%(title)s.%(ext)s"
+  , [iii|#{tmpDir}/%(title)s.%(ext)s|]
   , "-q"
   , "--no-warnings"
   , "--exec"
-  , "mv {} ~/music/synchronized/"
+  , [iii|mv {} #{targetDir}/"|]
   , "--"
   , youtubeId
   ]
@@ -37,14 +37,14 @@ data DownloadSaverMsg = SynchronizationFinished String
 
 newtype DownloaderMsg = DownloaderStart Process deriving (Show)
 
-downloader :: A.ActorRef DownloadSaverMsg -> A.ActorId -> A.Behavior DownloaderMsg
-downloader saverActor currentActorId = A.Behavior $ \case
+downloader :: A.ActorRef DownloadSaverMsg -> FilePath -> FilePath -> A.ActorId -> A.Behavior DownloaderMsg
+downloader saverActor tmpDir targetDir currentActorId = A.Behavior $ \case
   DownloaderStart process -> do
     let youtubeId = processYoutubeId process
                     
     L.log (L.SynchronizationStarted youtubeId currentActorId)
 
-    let shellProcess = (proc "youtube-dl" (getDownloadParams youtubeId)) {
+    let shellProcess = (proc "youtube-dl" (getDownloadParams youtubeId tmpDir targetDir)) {
           std_in  = UseHandle stdin,
           std_out = CreatePipe,
           std_err = CreatePipe
@@ -70,7 +70,7 @@ downloader saverActor currentActorId = A.Behavior $ \case
         A.send saverActor (SynchronizationFinished youtubeId)
         L.log (L.SynchronizationFinished youtubeId currentActorId)
     
-    return (downloader saverActor currentActorId)
+    return (downloader saverActor tmpDir targetDir currentActorId)
 
 downloadSaver :: FilePath -> TVar Int -> A.Behavior DownloadSaverMsg
 downloadSaver processPath processedCounter = A.Behavior $ \case
