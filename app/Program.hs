@@ -8,7 +8,7 @@ import Lib
 import Data.Semigroup ((<>))
 
 
-data Command = Prepare PrepareOptions | Synchronize SynchronizeOptions
+data Command = Prepare PrepareOptions | Synchronize SynchronizeOptions | Failed FailedOptions
 
 prepareOptionsParser :: Parser PrepareOptions
 prepareOptionsParser = PrepareOptions <$>
@@ -46,11 +46,28 @@ synchronizeOptionsParser = SynchronizeOptions <$>
     <> help "Path to a directory in which temporary files will be stored (default: /tmp)"
   )
 
+failedOptionsParser :: Parser FailedOptions
+failedOptionsParser = FailedOptions <$>
+  switch (
+    long "short"
+    <> short 's'
+    <> help "List only failed YouTube ids without decorations"
+  )
+  <*> strOption (
+    long "processes"
+    <> short 'p'
+    <> metavar "FILE"
+    <> help "Location for processes database"
+  )
+
 prepareOptions :: Parser Command
 prepareOptions = Prepare <$> prepareOptionsParser
 
 synchronizeOptions :: Parser Command
 synchronizeOptions = Synchronize <$> synchronizeOptionsParser
+
+failedOptions :: Parser Command
+failedOptions = Failed <$> failedOptionsParser
 
 optionsParser :: Parser Command
 optionsParser = hsubparser (
@@ -63,6 +80,11 @@ optionsParser = hsubparser (
     info
     synchronizeOptions
     (progDesc "Synchronize all pending bookmarks")
+  )
+  <> command "failed" (
+    info
+    failedOptions
+    (progDesc "Prints failed processes")
   )
   )
 

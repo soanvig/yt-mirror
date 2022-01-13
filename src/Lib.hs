@@ -1,8 +1,10 @@
 module Lib (
   prepare
   , synchronize
+  , failed
   , SynchronizeOptions(..)
   , PrepareOptions(..)
+  , FailedOptions(..)
 ) where
 
 import Definitions
@@ -13,7 +15,6 @@ import Data.List (nub)
 import Database.SQLite.Simple (Connection)
 import qualified Actor as A
 import qualified Logger as L
-import qualified Data.List as FR
 import qualified Downloader as D
 import Control.Concurrent.STM
 import Helpers
@@ -39,6 +40,12 @@ data SynchronizeOptions = SynchronizeOptions {
   , synchronizeTargetDir :: String
 }
 data PrepareOptions = PrepareOptions { prepareProcesses :: String, prepareBookmarks :: String }
+data FailedOptions = FailedOptions { failedIsShort :: Bool, failedProcesses :: String }
+
+failed :: FailedOptions -> IO ()
+failed (FailedOptions isShort failedProcesses) = do
+  processes <- PR.openRepository failedProcesses PR.getFailedProcesses
+  L.log $ L.FailedLogRequested isShort processes 
 
 prepare :: PrepareOptions -> IO ()
 prepare (PrepareOptions processPath bookmarksPath) = do
@@ -53,7 +60,7 @@ prepare (PrepareOptions processPath bookmarksPath) = do
 
 synchronize :: SynchronizeOptions -> IO ()
 synchronize (SynchronizeOptions processPath tmpDir targetDir) = do
-  let actorCount = 2
+  let actorCount = 10
   let actorIds = fmap (\x -> A.ActorId x (getRandomString 5 x)) [1..actorCount]
 
   processedCounter <- newTVarIO 0

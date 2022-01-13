@@ -8,8 +8,9 @@ main :: IO ()
 main = do
   hSetBuffering stdout LineBuffering
 
-  command <- getCommand 
+  command <- getCommand
 
   case command of
     Prepare prepareOptions -> prepare prepareOptions
     Synchronize synchronizeOptions -> synchronize synchronizeOptions 
+    Failed failedOptions -> failed failedOptions 

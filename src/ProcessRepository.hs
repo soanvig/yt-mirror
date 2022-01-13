@@ -1,10 +1,11 @@
 module ProcessRepository (
-  openRepository,
-  finishProcess,
-  errorProcess,
-  getProcesses,
-  getPendingProcesses,
-  saveProcesses
+  openRepository
+  , finishProcess
+  , errorProcess
+  , getProcesses
+  , getPendingProcesses
+  , saveProcesses
+  , getFailedProcesses
 ) where
 
 import Database.SQLite.Simple
@@ -59,6 +60,11 @@ getProcesses :: ReaderT Connection IO [Process]
 getProcesses = do
   conn <- ask
   lift $ query_ conn "SELECT youtubeId, state, errorMessage FROM process"
+
+getFailedProcesses :: ReaderT Connection IO [Process]
+getFailedProcesses = do
+  conn <- ask
+  lift $ query conn "SELECT youtubeId, state, errorMessage FROM process WHERE state = (?)" [ProcessFailed]
 
 getPendingProcesses :: ReaderT Connection IO [Process]
 getPendingProcesses = do

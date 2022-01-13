@@ -45,10 +45,10 @@ downloader saverActor tmpDir targetDir currentActorId = A.Behavior $ \case
     L.log (L.SynchronizationStarted youtubeId currentActorId)
 
     let shellProcess = (proc "youtube-dl" (getDownloadParams youtubeId tmpDir targetDir)) {
-          std_in  = UseHandle stdin,
-          std_out = CreatePipe,
-          std_err = CreatePipe
-          }
+      std_in  = UseHandle stdin,
+      std_out = CreatePipe,
+      std_err = CreatePipe
+    }
 
     processHandler@(_, _, Just hErr, p) <- createProcess_ "" shellProcess
 
@@ -79,7 +79,8 @@ downloadSaver processPath processedCounter = A.Behavior $ \case
     atomically $ modifyTVar processedCounter (+ 1)
     return (downloadSaver processPath processedCounter)
   DownloadFailed youtubeId errorMessage -> do
-    PR.openRepository processPath (PR.errorProcess youtubeId (trim errorMessage))
+    let pureErrorMessage = trim . replace '\n' ' ' $ errorMessage
+    PR.openRepository processPath (PR.errorProcess youtubeId pureErrorMessage)
     atomically $ modifyTVar processedCounter (+ 1)
     return (downloadSaver processPath processedCounter)
 

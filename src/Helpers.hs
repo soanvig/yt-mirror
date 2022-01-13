@@ -32,3 +32,7 @@ trim :: String -> String
 trim = f . f
    where f = reverse . dropWhile isSpace
 
+replace :: Eq a => a -> a -> [a] -> [a]
+replace x y [] = []
+replace x y (z:zs) | z == x = y : replace x y zs
+replace x y (z:zs) = z : replace x y zs

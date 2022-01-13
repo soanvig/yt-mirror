@@ -27,3 +27,11 @@ yt-mirror-exe synchronize -p ./process.sqlite -t ~/music/synchronized --tmp /tmp
 ```
 
 `--tmp` defaults to `/tmp` and describes where `youtube-dl` temporary files will be stored.
+
+To show failed synchronizations:
+
+```sh
+yt-mirror-exe failed -p ./process.sqlite [-s/--short]
+```
+
+`-s`/`--short` prints only failed YouTube ids without any decorations
