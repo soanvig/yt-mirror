@@ -42,9 +42,11 @@ executable yt-mirror-exe
     hs-source-dirs:   app
     other-modules:
         Program
+        Dependencies
     build-depends:    base ^>=4.14.1.0
-                     , yt-mirror
-                     , optparse-applicative
+                    , yt-mirror
+                    , optparse-applicative
+                    , directory
     default-language: Haskell2010
     ghc-options: -threaded
 
