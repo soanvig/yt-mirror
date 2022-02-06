@@ -24,7 +24,7 @@ getDownloadParams youtubeId tmpDir targetDir = [
   , "-q"
   , "--no-warnings"
   , "--exec"
-  , [iii|mv {} #{targetDir}/"|]
+  , [iii|mv {} #{targetDir}/|]
   , "--"
   , youtubeId
   ]
@@ -44,7 +44,7 @@ downloader saverActor tmpDir targetDir currentActorId = A.Behavior $ \case
                     
     L.log (L.SynchronizationStarted youtubeId currentActorId)
 
-    let shellProcess = (proc "youtube-dl" (getDownloadParams youtubeId tmpDir targetDir)) {
+    let shellProcess = (proc "yt-dlp" (getDownloadParams youtubeId tmpDir targetDir)) {
       std_in  = UseHandle stdin,
       std_out = CreatePipe,
       std_err = CreatePipe

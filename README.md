@@ -10,7 +10,7 @@ Currently it works only on Linux (dependency on `mv` command - for Windows chang
 
 - sqlite3
 - ffmpeg
-- youtube-dl
+- yt-dlp
 
 ## Usage
 
