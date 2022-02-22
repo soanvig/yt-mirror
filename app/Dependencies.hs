@@ -12,7 +12,7 @@ verifyDependency executable = do
 
 dependencyList :: [String]
 dependencyList = [
-  "youtube-dl"
+  "yt-dlp"
   , "sqlite3"
   , "ffmpeg"
   ]
