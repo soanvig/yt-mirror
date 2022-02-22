@@ -6,6 +6,10 @@ Some necessary things are still missing for MVP. See Issues for more details.
 
 Currently it works only on Linux (dependency on `mv` command - for Windows change `mv` to `move` in `Downloader.hs`)
 
+## Supported browsers
+
+- Firefox
+
 ## Requirements
 
 - sqlite3
