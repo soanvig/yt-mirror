@@ -15,16 +15,17 @@ import System.Exit ( ExitCode(ExitSuccess, ExitFailure) )
 import qualified Logger as L
 import Data.String.Interpolate
 import Helpers
+import Debug.Trace (trace, traceId, traceIO)
+import Data.List (isInfixOf)
 
 getDownloadParams :: String -> FilePath -> FilePath -> String -> [String]
 getDownloadParams youtubeId tmpDir targetDir matchFilter = [
   "-x"
   , "-o"
   , [iii|#{tmpDir}/%(title)s.%(ext)s|]
-  , "-q"
   , "--no-warnings"
   , "--exec"
-  , [iii|mv {} #{targetDir}/"|]
+  , [iii|mv {} #{targetDir}/|]
   , "--match-filter"
   , if matchFilter == "" then "comment_count >? 0" else matchFilter
   , "--"
@@ -44,7 +45,7 @@ downloader :: A.ActorRef DownloadSaverMsg -> FilePath -> FilePath -> String -> A
 downloader saverActor tmpDir targetDir matchFilter currentActorId = A.Behavior $ \case
   DownloaderStart process -> do
     let youtubeId = processYoutubeId process
-                    
+
     L.log (L.SynchronizationStarted youtubeId currentActorId)
 
     let shellProcess = (proc "yt-dlp" (getDownloadParams youtubeId tmpDir targetDir matchFilter)) {
@@ -58,7 +59,7 @@ downloader saverActor tmpDir targetDir matchFilter currentActorId = A.Behavior $
     exitCode <- waitForProcess p
     errorMessage <- hGetContents hErr
     outputMessage <- hGetContents hOut
-    
+
     -- What is the consequence of not closing the handles?
     -- If they are closed with `withCreateProcess` or with `cleanupProcess`
     -- then I'm unable to get contents, because `hGetContents` is lazy.
@@ -66,16 +67,27 @@ downloader saverActor tmpDir targetDir matchFilter currentActorId = A.Behavior $
     -- quitting process should automatically close handles by the system
     -- cleanupProcess processHandler
 
-    -- @TODO detect and save "skipped" state
+    let isSkipped = "skipping .." `isInfixOf` outputMessage
 
-    case exitCode of
-      ExitFailure _ -> do
-        A.send saverActor (DownloadFailed youtubeId errorMessage)
-        L.log (L.SynchronizationError youtubeId currentActorId)
-      ExitSuccess -> do
-        A.send saverActor (SynchronizationFinished youtubeId)
-        L.log (L.SynchronizationFinished youtubeId currentActorId)
-    
+    let (downloaderMsg, logMsg) = if isSkipped
+        then (
+          DownloadSkipped youtubeId
+          , L.SynchronizationSkipped youtubeId currentActorId
+          )
+        else
+          case exitCode of
+            ExitFailure _ -> (
+              DownloadFailed youtubeId errorMessage
+              , L.SynchronizationError youtubeId currentActorId
+              )
+            ExitSuccess -> (
+              SynchronizationFinished youtubeId
+              , L.SynchronizationFinished youtubeId currentActorId
+              )
+
+    A.send saverActor downloaderMsg
+    L.log logMsg
+
     return (downloader saverActor tmpDir targetDir matchFilter currentActorId)
 
 downloadSaver :: FilePath -> TVar Int -> A.Behavior DownloadSaverMsg

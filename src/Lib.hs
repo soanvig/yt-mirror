@@ -19,19 +19,9 @@ import qualified Downloader as D
 import Control.Concurrent.STM
 import Helpers
 
-testProcesses :: [Process]
-testProcesses = [
-  Process "QODq6HhXnMM" ProcessPending Nothing -- 10 hours
-  , Process "-gtZQ2xgcBE" ProcessPending Nothing -- works
-  , Process "vtC8sSWuPY0" ProcessPending Nothing -- error
-  , Process "MBW3Jo9yoxo" ProcessPending Nothing -- works
-  , Process "hiPXP7nIVtI" ProcessPending Nothing -- error
-  ]
-
 getPendingProcesses :: FilePath -> IO [Process]
 getPendingProcesses processPath = do
   PR.openRepository processPath PR.getPendingProcesses
-  -- return testProcesses
   
 -- public
 

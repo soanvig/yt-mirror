@@ -13,6 +13,7 @@ data Log
   | AllSynchronizationStarted Int [Process]
   | SynchronizationStarted String ActorId
   | SynchronizationFinished String ActorId
+  | SynchronizationSkipped String ActorId
   | SynchronizationError String ActorId
   | PreparingStarted Int
   | PreparingFinished
@@ -51,6 +52,9 @@ log (SynchronizationFinished youtubeId actorId) = do
 
 log (SynchronizationError youtubeId actorId) = do
   printActor actorId [iii|Downloading error: #{youtubeId}.|]
+
+log (SynchronizationSkipped youtubeId actorId) = do
+  printActor actorId [iii|Downloading skipped: #{youtubeId}.|]
 
 log (PreparingStarted bookmarksCount) = do
   putStrLn [iii|Preparing bookmarks (overall Youtube bookmarks: #{bookmarksCount}) for synchronization.|]
