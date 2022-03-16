@@ -60,6 +60,7 @@ downloader saverActor tmpDir targetDir currentActorId = A.Behavior $ \case
     -- then I'm unable to get contents, because `hGetContents` is lazy.
     -- According to this: https://stackoverflow.com/questions/32337336/do-i-need-to-call-closehandle
     -- quitting process should automatically close handles by the system
+    
     -- cleanupProcess processHandler
     
     case exitCode of
