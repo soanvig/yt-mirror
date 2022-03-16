@@ -39,3 +39,17 @@ yt-mirror-exe failed -p ./process.sqlite [-s/--short]
 ```
 
 `-s`/`--short` prints only failed YouTube ids without any decorations
+
+### Filtering videos to download
+
+Using `--filter` user can utilise full power of [youtube-dl --match-filter](https://github.com/ytdl-org/youtube-dl/blob/master/README.md#video-selection).
+It is useful to skip some videos, like those annoying 10h music videos that are sometimes added to bookmarks.
+
+If video is filtered its process will be marked as "skipped".
+
+Example - to download only videos with duration lower than 1000s:
+
+```
+yt-mirror-exe synchronize -p ./process.sqlite -t ~/music/synchronized --filter "duration < 1000"
+```
+
