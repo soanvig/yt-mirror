@@ -12,6 +12,7 @@ data ProcessState
   = ProcessPending
   | ProcessFailed
   | ProcessFinished
+  | ProcessSkipped
   deriving (Show, Read)
 
 data Process = Process

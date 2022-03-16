@@ -28,24 +28,29 @@ prepareOptionsParser = PrepareOptions <$>
 synchronizeOptionsParser :: Parser SynchronizeOptions
 synchronizeOptionsParser = SynchronizeOptions <$>
   strOption (
-    long "processes"
+  long "processes"
     <> short 'p'
     <> metavar "FILE"
     <> help "Location for processes database (created automatically if doesn't exist)"
   )
   <*> strOption (
-    long "tmp"
+  long "tmp"
     <> metavar "DIRECTORY"
     <> value "/tmp"
     <> help "Path to a directory in which temporary files will be stored (default: /tmp)"
   )
   <*> strOption (
-    long "target"
+  long "target"
     <> short 't'
     <> metavar "DIRECTORY"
     <> help "Path to a directory into which music files will be downloaded"
   )
-
+  <*> strOption (
+  long "filter"
+    <> metavar "FILTER_EXPRESSION"
+    <> value ""
+    <> help "Options for --match-filter (https://github.com/ytdl-org/youtube-dl/blob/master/README.md#video-selection)"
+  )
 
 failedOptionsParser :: Parser FailedOptions
 failedOptionsParser = FailedOptions <$>

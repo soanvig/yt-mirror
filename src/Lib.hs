@@ -19,18 +19,9 @@ import qualified Downloader as D
 import Control.Concurrent.STM
 import Helpers
 
-testProcesses :: [Process]
-testProcesses = [
-  Process "-gtZQ2xgcBE" ProcessPending Nothing -- works
-  , Process "vtC8sSWuPY0" ProcessPending Nothing -- error
-  , Process "MBW3Jo9yoxo" ProcessPending Nothing -- works
-  , Process "hiPXP7nIVtI" ProcessPending Nothing -- error
-  ]
-
 getPendingProcesses :: FilePath -> IO [Process]
 getPendingProcesses processPath = do
   PR.openRepository processPath PR.getPendingProcesses
-  -- return testProcesses
   
 -- public
 
@@ -38,6 +29,7 @@ data SynchronizeOptions = SynchronizeOptions {
   synchronizeProcesses :: String
   , synchronizeTmpDir :: String
   , synchronizeTargetDir :: String
+  , synchronizeFilter :: String
 }
 data PrepareOptions = PrepareOptions { prepareProcesses :: String, prepareBookmarks :: String }
 data FailedOptions = FailedOptions { failedIsShort :: Bool, failedProcesses :: String }
@@ -59,7 +51,7 @@ prepare (PrepareOptions processPath bookmarksPath) = do
   L.log L.PreparingFinished
 
 synchronize :: SynchronizeOptions -> IO ()
-synchronize (SynchronizeOptions processPath tmpDir targetDir) = do
+synchronize (SynchronizeOptions processPath tmpDir targetDir matchFilter) = do
   let actorCount = 10
   let actorIds = fmap (\x -> A.ActorId x (getRandomString 5 x)) [1..actorCount]
 
@@ -67,7 +59,7 @@ synchronize (SynchronizeOptions processPath tmpDir targetDir) = do
   downloaderBox <- newTQueueIO
   downloadSaverActor <- A.spawn (D.downloadSaver processPath processedCounter)
   downloaderActors <- mapM
-    (A.spawnWithBox downloaderBox  . D.downloader downloadSaverActor tmpDir targetDir)
+    (A.spawnWithBox downloaderBox  . D.downloader downloadSaverActor tmpDir targetDir matchFilter)
     actorIds
 
   pendingProcesses <- getPendingProcesses processPath

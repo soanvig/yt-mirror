@@ -6,6 +6,7 @@ module ProcessRepository (
   , getPendingProcesses
   , saveProcesses
   , getFailedProcesses
+  , skipProcess
 ) where
 
 import Database.SQLite.Simple
@@ -80,6 +81,11 @@ errorProcess :: String -> String -> ReaderT Connection IO ()
 errorProcess youtubeId errorMessage = do
   conn <- ask
   lift $ execute conn "UPDATE process SET state = (?), errorMessage = (?) WHERE youtubeId = (?)" (ProcessFailed, errorMessage, youtubeId)
+
+skipProcess :: String -> ReaderT Connection IO ()
+skipProcess youtubeId = do
+  conn <- ask
+  lift $ execute conn "UPDATE process SET state = (?) WHERE youtubeId = (?)" (ProcessSkipped, youtubeId)
 
 saveProcesses :: [Process] -> ReaderT Connection IO ()
 saveProcesses [] = return ()
