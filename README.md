@@ -53,3 +53,12 @@ Example - to download only videos with duration lower than 1000s:
 yt-mirror-exe synchronize -p ./process.sqlite -t ~/music/synchronized --filter "duration < 1000"
 ```
 
+## Bookmarks locations
+
+```
+. | Firefox | Chrome | Chromium
+--- | --- | --- | ---
+Windows | ? | ? | ?
+Linux | ` ~/.mozilla/firefox/i2xv3ca2.default-default/places.sqlite` | `~/.config/google-chrome/Default/Bookmarks` | `~/.config/chromium/Default/Bookmarks`
+
+
