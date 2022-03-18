@@ -55,10 +55,9 @@ yt-mirror-exe synchronize -p ./process.sqlite -t ~/music/synchronized --filter "
 
 ## Bookmarks locations
 
-```
 . | Firefox | Chrome | Chromium
 --- | --- | --- | ---
-Windows | ? | ? | ?
+Windows | ? | `%appdata%\Local\Google\Chrome\User Data\Default\Bookmarks`w | ?
 Linux | ` ~/.mozilla/firefox/i2xv3ca2.default-default/places.sqlite` | `~/.config/google-chrome/Default/Bookmarks` | `~/.config/chromium/Default/Bookmarks`
 
 
