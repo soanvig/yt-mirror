@@ -18,7 +18,7 @@ Currently it works only on Linux (dependency on `mv` command - for Windows chang
 
 ## Usage
 
-Start by preparing bookmarks to synchronize:
+Start by preparing bookmarks to synchronize (`places.sqlite` is treated as Firefox bookmarks, `Bookmarks[.json]` is treated as Chromium-alike bookmarks):
 
 ```sh
 yt-mirror-exe prepare -p ./process.sqlite -b ./places.sqlite
@@ -40,6 +40,16 @@ yt-mirror-exe failed -p ./process.sqlite [-s/--short]
 
 `-s`/`--short` prints only failed YouTube ids without any decorations
 
+### Using multiple bookmarks sources
+
+Because `prepare` step is separated, and videos to synchronize are stored with video id, you can use multiple sources of bookmarks to prepare, just by
+running `prepare` step multiple times. For example to synchronize bookmarks from Firefox and Chrome:
+
+```sh
+yt-mirror-exe prepare -p ./process.sqlite -b [...]/places.sqlite
+yt-mirror-exe prepare -p ./process.sqlite -b [...]/Bookmarks
+```
+
 ### Filtering videos to download
 
 Using `--filter` user can utilise full power of [youtube-dl --match-filter](https://github.com/ytdl-org/youtube-dl/blob/master/README.md#video-selection).
@@ -57,7 +67,7 @@ yt-mirror-exe synchronize -p ./process.sqlite -t ~/music/synchronized --filter "
 
 . | Firefox | Chrome | Chromium
 --- | --- | --- | ---
-Windows | ? | `%appdata%\Local\Google\Chrome\User Data\Default\Bookmarks`w | ?
+Windows | `%appdata%\Mozilla\Firefox\Profiles\*\places.sqlite` | `%appdata%\..\Local\Google\Chrome\User Data\Default\Bookmarks` | ?
 Linux | ` ~/.mozilla/firefox/i2xv3ca2.default-default/places.sqlite` | `~/.config/google-chrome/Default/Bookmarks` | `~/.config/chromium/Default/Bookmarks`
 
 

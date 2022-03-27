@@ -1,6 +1,8 @@
 module Definitions where
 
 import Youtube
+import Control.Monad.Reader (ReaderT)
+import qualified Data.ByteString.Lazy (ByteString)
 
 data Bookmark = Bookmark
   { bookmarkTitle :: String,
@@ -21,6 +23,9 @@ data Process = Process
     processError :: Maybe String
   }
   deriving (Show)
+
+class Repository a where
+  loadBookmarks :: a -> IO [Bookmark]
 
 instance Eq Process where
   (==) p1 p2 = processYoutubeId p1 == processYoutubeId p2

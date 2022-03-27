@@ -22,7 +22,7 @@ prepareOptionsParser = PrepareOptions <$>
     long "bookmarks"
     <> short 'b'
     <> metavar "FILE"
-    <> help "Location of browser database (Firefox: `places.sqlite`)"
+    <> help "Location of browser database (Firefox: `places.sqlite`, Chrome: `Bookmarks.json` - see README for more details)"
   )
 
 synchronizeOptionsParser :: Parser SynchronizeOptions

@@ -1,11 +1,9 @@
 module FirefoxRepository (
-  openRepository,
-  loadBookmarks
+  FirefoxRepository(..)
 ) where
 
 import Database.SQLite.Simple 
 import Definitions
-import Control.Monad.Reader
 import Data.String.Interpolate
 
 instance FromRow Bookmark where
@@ -23,17 +21,12 @@ ON moz_places.id = moz_bookmarks.fk
       
 -- Public
 
-openRepository :: String -> ReaderT Connection IO a -> IO a
-openRepository placesLocation operation = do
-  conn <- open placesLocation
+newtype FirefoxRepository = FirefoxRepository String
 
-  result <- runReaderT operation conn
+instance Repository FirefoxRepository where
+  loadBookmarks (FirefoxRepository placesLocation) = do
+    conn <- open placesLocation
+    result <-  query_  conn selectBookmarksQuery
+    close conn
 
-  close conn
-
-  return result
-
-loadBookmarks :: ReaderT Connection IO [Bookmark]
-loadBookmarks = do
-  conn <- ask
-  lift $ query_  conn selectBookmarksQuery
+    return result
