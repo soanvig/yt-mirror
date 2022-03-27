@@ -9,6 +9,7 @@ Currently it works only on Linux (dependency on `mv` command - for Windows chang
 ## Supported browsers
 
 - Firefox
+- Chrome/Chromium/Edge (and possibly other Chromium-based browsers)
 
 ## Requirements
 
