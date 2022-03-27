@@ -9,6 +9,7 @@ module Lib (
 
 import Definitions
 import qualified FirefoxRepository as FR
+import qualified ChromiumRepository as CR
 import qualified ProcessRepository as PR
 import Data.Maybe (mapMaybe)
 import Data.List (nub)
@@ -18,11 +19,12 @@ import qualified Logger as L
 import qualified Downloader as D
 import Control.Concurrent.STM
 import Helpers
+import System.FilePath (takeFileName)
 
 getPendingProcesses :: FilePath -> IO [Process]
 getPendingProcesses processPath = do
   PR.openRepository processPath PR.getPendingProcesses
-  
+
 -- public
 
 data SynchronizeOptions = SynchronizeOptions {
@@ -41,7 +43,11 @@ failed (FailedOptions isShort failedProcesses) = do
 
 prepare :: PrepareOptions -> IO ()
 prepare (PrepareOptions processPath bookmarksPath) = do
-  bookmarks <- FR.openRepository bookmarksPath FR.loadBookmarks
+  bookmarks <- case takeFileName bookmarksPath of
+    "Bookmarks" -> loadBookmarks $ CR.ChromeRepository bookmarksPath
+    "Bookmarks.json" -> loadBookmarks $ CR.ChromeRepository bookmarksPath
+    "places.sqlite" -> loadBookmarks $ FR.FirefoxRepository bookmarksPath
+    _ -> error "Unknown bookmarks format (identified by file name)"
 
   L.log $ L.PreparingStarted (length bookmarks)
 
