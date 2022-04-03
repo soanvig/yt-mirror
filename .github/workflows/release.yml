@@ -24,6 +24,6 @@ jobs:
       - run: |
           cabal install --enable-executable-static --enable-executable-stripping
           cp ~/.cabal/bin/yt-mirror-exe ./yt-mirror
-      - run: npx semantic-release -b release
+      - run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
