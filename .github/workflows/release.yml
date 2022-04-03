@@ -1,0 +1,29 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+      - uses: haskell/actions/setup@v1
+        with:
+          ghc-version: '8.10.7'
+          cabal-version: '3.4'
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - run: cabal update
+      - run: |
+          cabal install --enable-executable-static --enable-executable-stripping
+          cp ~/.cabal/bin/yt-mirror-exe ./yt-mirror
+      - run: npx semantic-release -b release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
