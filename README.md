@@ -1,10 +1,14 @@
 # yt-mirror
 
-**This tool is still in active development, therefore it is not suitable for end-user**
+Do you use YouTube to listen to music, and you save it in bookmarks? I do.
+It would be cool to have all this music on your local PC as a backup or just offline access, wouldn't it?
 
-Some necessary things are still missing for MVP. See Issues for more details.
+`yt-mirror` parses your browser bookmarks, looks for YouTube URLs, downloads movies, and converts them to a music file.
+It runs incrementally, so you can synchronize videos as they are added up - only new bookmarks will be downloaded.
 
-Currently it works only on Linux (dependency on `mv` command - for Windows change `mv` to `move` in `Downloader.hs`)
+**This tool is still in active development**
+
+Currently it works only on Linux (dependency on `mv` command - for Windows change `mv` to `move` in `Downloader.hs`).
 
 ## Supported browsers
 
@@ -16,6 +20,10 @@ Currently it works only on Linux (dependency on `mv` command - for Windows chang
 - sqlite3
 - ffmpeg
 - yt-dlp
+
+## Installation
+
+Download binary from GitHub Release page or build from source using Cabal.
 
 ## Usage
 
